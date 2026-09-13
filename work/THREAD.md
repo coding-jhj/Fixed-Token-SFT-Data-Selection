@@ -230,3 +230,7 @@
 ### Next action
 - Let the current `--resume` evaluation finish. Then run `src/analyze_followup_results.py` for the two seed-2026 adapters, update the manuscript/README/provenance/ZIP builder, rebuild and visually inspect the PDF, and commit/push the follow-up integration.
 - Detailed commands and estimates: `work/HANDOFF_2026-09-13.md`.
+
+### Publication snapshot
+- Commit `fb29f83 Add follow-up evaluation handoff` was pushed to `origin/main`.
+- The original `origin/master` branch was not modified. Future manuscript/PDF/ZIP integration is a separate push.
