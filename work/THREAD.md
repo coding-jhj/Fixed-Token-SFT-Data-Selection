@@ -222,7 +222,7 @@
 - Seed 2026 training completed for both adapters: random 995 rows/125 optimizer steps; diversity 1,027 rows/129 optimizer steps.
 - Handoff and supplementary result notes added under `work/`.
 
-### Current live status
+### Earlier live status before safe stop (historical)
 - Seed 2026 evaluation output directory: `work/evaluation_seed2026_long_generation/`.
 - Confirmed rows: 1,032/1,328 (77.7%): random 664/664; diversity IFEval 192/192, GSM8K 176/256, BBH 0/216.
 - Python evaluation process is still live (PID 2384 at the snapshot).
