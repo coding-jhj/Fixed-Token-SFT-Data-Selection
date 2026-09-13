@@ -188,3 +188,16 @@
 
 ### Next action
 - Stage the verified manuscript, renderer, analysis output, PDF, result figures, and reproduction ZIP; commit and push to `origin/master`.
+
+## 2026-09-13 table overflow correction
+
+### Issue and correction
+- User review identified visible overflow in the appendix checklist table, especially the long contamination-report path.
+- Root cause was confirmed in `wrap_to_width`: a whitespace-free token was accepted before the long-token splitting branch. The appendix table also used equal-width columns despite a path-heavy output column.
+- Fixed both conditions: long tokens are split using actual Malgun font metrics, and the appendix uses `[72, 114, 140, 174]` pt column widths with extra room for output paths.
+
+### Verification
+- `scripts\\reproduce_analysis.ps1`: `validation_all_files_complete: true`, `possible_truncation_total: 3937`.
+- `pdfinfo paper\\paper.pdf`: 21 pages, `595.44 x 841.68 pts (A4)`.
+- Rendered `work\\paper_pdf_render_tables_v3\\page-01.png` through `page-21.png`; all pages visually checked after the correction. No cell overflow, clipping, mixed page size, or orphaned heading was observed.
+- Reproduction ZIP will be rebuilt after this correction, then committed and pushed as the next publication fix.

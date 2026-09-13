@@ -53,15 +53,19 @@ def wrap_to_width(value: str, fontsize: float, max_width_pt: float, *, bold: boo
     current = ""
     for token in tokens:
         candidate = f"{current} {token}".strip()
-        if not current or text_width_pt(candidate, fontsize, bold=bold) <= max_width_pt:
+        if current and text_width_pt(candidate, fontsize, bold=bold) <= max_width_pt:
             current = candidate
             continue
-        lines.append(current)
-        current = token
-        if text_width_pt(current, fontsize, bold=bold) <= max_width_pt:
+
+        if current:
+            lines.append(current)
+
+        if text_width_pt(token, fontsize, bold=bold) <= max_width_pt:
+            current = token
             continue
+
         fragment = ""
-        for character in current:
+        for character in token:
             candidate_fragment = fragment + character
             if fragment and text_width_pt(candidate_fragment, fontsize, bold=bold) > max_width_pt:
                 lines.append(fragment)
@@ -241,12 +245,18 @@ class PaperPdf:
             return
         data = [[cell.replace("IFEval instruction strict", "IFEval\n지시 strict").replace("BBH task macro", "BBH task\nmacro").replace("BBH worst task", "BBH 최저\ntask").replace("고정 subset", "고정\nsubset").replace("Generation cap", "생성\n한도").replace("instruction family별 coverage-first stratification", "family별\ncoverage-first").replace("prompt-length four-quantile stratification", "prompt length\n4-quantile") for cell in row] for row in rows]
         font_size = 7.6 if len(data[0]) >= 7 else 8.4
-        column_width_pt = 500.0 / len(data[0])
+        header_text = " ".join(rows[0])
+        if "단계" in header_text and "산출물" in header_text:
+            # The appendix contains repository paths; give that column room
+            # instead of forcing every column to have the same width.
+            column_widths_pt = [72.0, 114.0, 140.0, 174.0]
+        else:
+            column_widths_pt = [500.0 / len(data[0])] * len(data[0])
         wrapped_data: list[list[str]] = []
         for row_index, row in enumerate(data):
             wrapped_data.append([
-                "\n".join(wrap_to_width(cell.replace("\n", " "), font_size, column_width_pt - 12.0, bold=row_index == 0))
-                for cell in row
+                "\n".join(wrap_to_width(cell.replace("\n", " "), font_size, column_widths_pt[column_index] - 12.0, bold=row_index == 0))
+                for column_index, cell in enumerate(row)
             ])
         row_line_counts = [max(cell.count("\n") + 1 for cell in row) for row in wrapped_data]
         row_height = max(0.040 + 0.014 * (line_count - 1) for line_count in row_line_counts)
@@ -257,7 +267,14 @@ class PaperPdf:
         self.add_table_caption(number, rows)
         axis = self.fig.add_axes([0.08, self.y - height, 0.84, height])
         axis.axis("off")
-        table = axis.table(cellText=wrapped_data[1:], colLabels=wrapped_data[0], cellLoc="center", colLoc="center", bbox=[0, 0, 1, 1])
+        table = axis.table(
+            cellText=wrapped_data[1:],
+            colLabels=wrapped_data[0],
+            colWidths=[width / 500.0 for width in column_widths_pt],
+            cellLoc="center",
+            colLoc="center",
+            bbox=[0, 0, 1, 1],
+        )
         table.auto_set_font_size(False)
         for (row_index, column_index), cell in table.get_celld().items():
             cell.set_edgecolor("#cbd5df")
