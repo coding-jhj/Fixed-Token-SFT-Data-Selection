@@ -42,6 +42,13 @@
 - `work/results_final/`: 최종 metric, paired bootstrap, validation 결과
 - `reproduction/`: 재현 패키지 보조 문서
 
+## 후속 검증 현황
+
+- 기존 6개 adapter의 장문 generation 재평가(`IFEval 1,024`, `GSM8K/BBH 256`)는 `3,984/3,984`개 완료했습니다. 다만 `3,928/3,984`개가 새 cap에 도달했을 가능성이 있어 보강 진단으로만 취급합니다.
+- random/diversity seed `2026`의 선택과 학습은 정확히 `1,000,000` formatted training tokens로 완료했습니다. 평가는 `1,192/1,328`개까지 저장되어 있으며 diversity BBH 136개가 남았습니다.
+- 전체 기준별 상태와 신뢰도 강화 계획은 [`work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md`](work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md)에 기록했습니다.
+- 내일 재개 명령과 보존된 중간 결과는 [`work/HANDOFF_2026-09-13.md`](work/HANDOFF_2026-09-13.md)에 있습니다.
+
 ## 한계
 
-현재 결과는 1.7B base model, 하나의 영어 데이터 풀, 두 개 seed, 고정 subset, 제한된 generation budget에 대한 결과입니다. 추가 seed, 더 긴 생성 한도, human evaluation, full benchmark baseline은 후속 과제로 남아 있습니다.
+현재 primary 결과는 1.7B base model, 하나의 영어 데이터 풀, 두 개 seed, 고정 subset, 제한된 generation budget에 대한 결과입니다. 세 번째 seed와 장문 generation 결과는 후속 검증 중이며, human evaluation, full benchmark baseline, 더 큰 평가 subset은 아직 완료하지 않았습니다.
