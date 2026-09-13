@@ -1,0 +1,9 @@
+metric,treatment,control,n_paired_examples,point_estimate,ci_95_lower,ci_95_upper,bootstrap_repetitions,bootstrap_seed,unit
+ifeval_prompt_strict,quality,random,192,-0.0078125,-0.044270833333333336,0.028645833333333332,10000,2026,same-example difference after averaging the two evaluation seeds
+ifeval_prompt_strict,diversity,random,192,-0.0026041666666666665,-0.033854166666666664,0.026041666666666668,10000,2026,same-example difference after averaging the two evaluation seeds
+ifeval_instruction_strict,quality,random,192,-0.02126736111111111,-0.05642361111111111,0.013020833333333334,10000,2026,same-example difference after averaging the two evaluation seeds
+ifeval_instruction_strict,diversity,random,192,-0.013454861111111112,-0.04296875,0.016059027777777776,10000,2026,same-example difference after averaging the two evaluation seeds
+gsm8k_accuracy,quality,random,256,0.009765625,-0.029296875,0.048828125,10000,2026,same-example difference after averaging the two evaluation seeds
+gsm8k_accuracy,diversity,random,256,0.02734375,-0.009765625,0.064453125,10000,2026,same-example difference after averaging the two evaluation seeds
+bbh_accuracy,quality,random,216,0.027777777777777776,-0.018518518518518517,0.0763888888888889,10000,2026,same-example difference after averaging the two evaluation seeds
+bbh_accuracy,diversity,random,216,0.09490740740740741,0.046296296296296294,0.14583333333333334,10000,2026,same-example difference after averaging the two evaluation seeds

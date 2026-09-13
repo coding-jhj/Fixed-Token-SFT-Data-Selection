@@ -1,0 +1,49 @@
+{
+  "evaluation_dataset": "google/IFEval",
+  "evaluation_count": 541,
+  "near_threshold": 0.92,
+  "manifests": {
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_diversity_seed13.jsonl": {
+      "training_count": 1029,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    },
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_diversity_seed42.jsonl": {
+      "training_count": 1021,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    },
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_quality_seed13.jsonl": {
+      "training_count": 1033,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    },
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_quality_seed42.jsonl": {
+      "training_count": 1033,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    },
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_random_seed13.jsonl": {
+      "training_count": 1006,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    },
+    "C:\\Users\\ghksw\\OneDrive\\Documents\\ChatGPT\\Aleph_Tenth_Homework\\work\\selection_manifests\\manifest_random_seed42.jsonl": {
+      "training_count": 1000,
+      "exact_overlap_count": 0,
+      "near_overlap_count": 0,
+      "exact_matches": [],
+      "near_matches": []
+    }
+  }
+}

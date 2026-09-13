@@ -1,0 +1,13 @@
+# 라이선스와 provenance
+
+이 실험은 dataset collection 전체를 동일한 라이선스로 간주하지 않고 source별 provenance를 기록했습니다.
+
+| Source | Revision | 사용 목적 | 재배포 관련 기록 |
+|---|---|---|---|
+| `HuggingFaceTB/smoltalk` | `5feaf2fd3ffca7c237fc38d1861bc30365d48ffa` | SFT selection용 Apache-2.0 설명 subset 네 개 | Local audit에 source별 주의사항을 기록했으며, 포함된 manifest에 source label과 ID를 보존했습니다. |
+| `google/IFEval` | `966cd89545d6b6acfd7638bc708b98261ca58e84` | Contamination check와 frozen evaluation subset | License 조건은 해당 upstream dataset card와 revision metadata를 확인해야 합니다. |
+| `openai/gsm8k` | `740312add88f781978c0658806c59bc2815b9866` | Frozen evaluation subset | Local audit에 MIT license로 기록했습니다. |
+| `lukaemon/bbh` | `982bb89fd79532a8ac676a61fc42eb1aeec63f99` | Frozen evaluation subset | Audit에서 conversion card가 명확한 redistribution license를 노출하지 않아 raw BBH row를 재배포하지 않습니다. |
+| `Qwen/Qwen3-1.7B-Base` | `ea980cb0a6c2ae4b936e82123acc929f1cec04c1` | Base model과 tokenizer | Upstream model card의 조건에 따라 직접 받아야 합니다. |
+
+전체 audit는 workspace의 `work/data_audit.md`에 보존되어 있습니다. 이 패키지는 재생성한 subset 파일이 실험을 조용히 변경하지 않았는지 확인할 수 있도록 hash와 선택 ID를 포함합니다.

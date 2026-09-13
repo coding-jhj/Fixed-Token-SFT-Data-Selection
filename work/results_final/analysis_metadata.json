@@ -1,0 +1,12 @@
+{
+  "tokenizer": "Qwen/Qwen3-1.7B-Base",
+  "tokenizer_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+  "max_new_tokens": {
+    "ifeval": 512,
+    "gsm8k": 128,
+    "bbh": 128
+  },
+  "selection_manifest": "work\\evaluation_subsets_final\\manifest.json",
+  "bootstrap": "paired same-example bootstrap after averaging seed-specific scores",
+  "validation_all_files_complete": true
+}

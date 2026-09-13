@@ -1,0 +1,42 @@
+{
+  "dataset": "HuggingFaceTB/smoltalk",
+  "dataset_revision": "5feaf2fd3ffca7c237fc38d1861bc30365d48ffa",
+  "included_configs": [
+    "smol-magpie-ultra",
+    "smol-constraints",
+    "smol-rewrite",
+    "smol-summarize"
+  ],
+  "tokenizer": "Qwen/Qwen3-1.7B-Base",
+  "tokenizer_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+  "max_length": 2048,
+  "overlength_policy": "exclude_complete_example",
+  "target_tokens": 1000000,
+  "quality_floor": 0.55,
+  "candidate_cap_per_stratum": 1000,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "pool_seed": 0,
+  "strategies": ["random", "quality", "diversity"],
+  "initial_seeds": [13, 42],
+  "strongest_comparison_seed": 2026,
+  "evaluation_contamination_check": {
+    "ifeval": {
+      "dataset": "google/IFEval",
+      "split": "train",
+      "rows": 541
+    },
+    "gsm8k": {
+      "dataset": "openai/gsm8k",
+      "revision": "740312add88f781978c0658806c59bc2815b9866",
+      "config": "main",
+      "split": "test",
+      "rows": 1319
+    },
+    "bbh": {
+      "dataset": "lukaemon/bbh",
+      "revision": "982bb89fd79532a8ac676a61fc42eb1aeec63f99",
+      "split": "test",
+      "rows": 6511
+    }
+  }
+}

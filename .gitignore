@@ -1,0 +1,21 @@
+.venv/
+**/__pycache__/
+*.py[cod]
+
+# Local model and adapter artifacts are too large for this repository.
+work/*
+!work/*.md
+!work/results_final/
+!work/results_final/*
+!work/selection_manifests/
+!work/selection_manifests/*.csv
+!work/selection_manifests/*.summary.json
+!work/evaluation_subsets_final/
+!work/evaluation_subsets_final/manifest.json
+
+# Raw benchmark and selected-example rows are distributed only according to
+# the reproduction package's license and redistribution notes.
+*.jsonl
+
+# Local visual QA renders.
+work/paper_pdf_render_*/

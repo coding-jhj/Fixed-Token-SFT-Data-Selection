@@ -1,0 +1,14 @@
+# 2026-09-13 완료 실행에서 검증한 환경
+python==3.12.13
+torch==2.11.0+cu128
+transformers==5.17.0
+datasets==5.0.1
+bitsandbytes==0.49.2
+sentence-transformers==6.0.1
+trl==1.13.0
+peft==0.20.0
+lm-eval==0.4.13
+
+# work/main_random_seed13/run_summary.json에서 확인한 hardware
+GPU=NVIDIA GeForce RTX 5060
+GPU_MEMORY_MIB=8151
