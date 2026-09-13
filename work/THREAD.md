@@ -234,3 +234,9 @@
 ### Publication snapshot
 - Commit `fb29f83 Add follow-up evaluation handoff` was pushed to `origin/main`.
 - The original `origin/master` branch was not modified. Future manuscript/PDF/ZIP integration is a separate push.
+
+### Safe stop snapshot
+- The seed-2026 evaluation was gracefully interrupted for overnight continuation; no Python evaluation process remained after verification.
+- Preserved progress: 1,192/1,328 rows (89.8%); diversity BBH 80/216. Remaining: 136 rows.
+- GitHub repository default branch is now `main`.
+- Updated handoff: `work/HANDOFF_2026-09-13.md`.

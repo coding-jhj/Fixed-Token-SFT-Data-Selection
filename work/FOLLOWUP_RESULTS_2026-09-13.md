@@ -60,10 +60,10 @@
 | random | 995 | 1,000,000 | 125 | 학습 완료 |
 | diversity | 1,027 | 1,000,000 | 129 | 학습 완료 |
 
-평가 subset은 IFEval 192, GSM8K 256, BBH 216입니다. 두 adapter 합계 1,328개 row 중 현재 1,032개가 생성되어 있습니다.
+평가 subset은 IFEval 192, GSM8K 256, BBH 216입니다. 두 adapter 합계 1,328개 row 중 안전하게 중단한 시점까지 1,192개가 생성되어 있습니다.
 
 - random seed 2026: IFEval 192, GSM8K 256, BBH 216 완료
-- diversity seed 2026: IFEval 192, GSM8K 176 진행
-- diversity seed 2026: BBH 216 미실행
+- diversity seed 2026: IFEval 192/192, GSM8K 256/256 완료
+- diversity seed 2026: BBH 80/216 완료
 
-현재 평가가 종료된 뒤 이 문서의 진행 수치를 갱신하고, 두 seed 간 paired analysis를 수행해야 합니다.
+현재 평가 프로세스는 정상 중단되었으며, 남은 diversity BBH 136개는 아래 인수인계 문서의 `--resume` 명령으로 내일 이어서 실행할 수 있습니다. 평가 완료 뒤 두 seed 간 paired analysis를 수행해야 합니다.
