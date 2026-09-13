@@ -166,3 +166,25 @@
 - GitHub publication: added the provided remote as `origin`, created root `README.md` and `.gitignore`, committed 54 curated files as `8dfbfa6`, and pushed successfully to `origin/master`. Local status is clean and tracks the remote branch.
 - Publication scope: excluded `.venv`, adapter checkpoints, tokenizers, raw JSONL, and visual QA renders from GitHub because they total most of the 800 MB workspace and have redistribution/size concerns. The 763 KB reproduction ZIP remains included.
 - Editorial diagnosis: current manuscript is a complete experiment/reproduction report but still feels visually and substantively light as a paper because the results are concentrated in a few aggregate tables, there is only one figure, methods lack algorithm/equation detail, and there is no per-seed/failure-case appendix or fuller related-work synthesis. A second, content-expansion commit is recommended; no unsupported results should be invented.
+
+## 2026-09-13 continuation: paper expansion and final publication
+
+### Objective
+- Expand the Korean manuscript using only verified experiment outputs, improve result interpretation and reproducibility detail, retypeset the PDF, and publish the second commit.
+
+### Completed
+- Added related-work gap framing and two explicit comparison questions.
+- Added the quality proxy equation and definitions, selection-order/quota rationale, and analysis-unit/reproducibility judgment section.
+- Added seed-level result table, paired-contrast forest plot, BBH task-level direction summary, generation-cap interpretation, and reproducibility checklist appendix.
+- Updated the strategy chart's previously empty BBH minimum-task panel with the verified all-policy value of 0.00%.
+- Increased heading-before-table reservation so `3.9 계획 대비 실제 실행 범위` stays with its following table.
+
+### Verification
+- `python -m py_compile src\\analyze_final_results.py scripts\\build_paper_pdf.py`: passed.
+- `scripts\\reproduce_analysis.ps1`: `validation_all_files_complete: true`, `possible_truncation_total: 3937`.
+- `pdfinfo paper\\paper.pdf`: 21 pages, `595.44 x 841.68 pts (A4)`, 434,699 bytes.
+- Rendered `work\\paper_pdf_render_expanded_v2\\page-01.png` through `page-21.png`; all pages visually checked. No clipping, mixed page sizes, orphaned section heading, or missing figure/table was observed.
+- Rebuilt `T10_post_training_reproduction_package_2026-09-13.zip`: 50 entries, paired contrast plot and appendix present, raw JSONL 0, `testzip=None`.
+
+### Next action
+- Stage the verified manuscript, renderer, analysis output, PDF, result figures, and reproduction ZIP; commit and push to `origin/master`.

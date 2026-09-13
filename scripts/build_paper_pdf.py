@@ -224,6 +224,12 @@ class PaperPdf:
             caption = f"표 {number}. 출력 무결성 및 생성 한도 진단"
         elif "변경 항목" in first:
             caption = f"표 {number}. 계획 대비 실제 실행 범위"
+        elif "단계" in first and "산출물" in first:
+            caption = f"표 {number}. 재현 체크리스트"
+        elif "Seed" in first and "IFEval" in first:
+            caption = f"표 {number}. Seed별 평가 결과"
+        elif "비교 단위" in first:
+            caption = f"표 {number}. BBH task 수준 비교 요약"
         elif "환경" in first and "버전" in first:
             caption = f"표 {number}. 재현 환경"
         else:
@@ -277,6 +283,17 @@ class PaperPdf:
             self.y -= height + 0.012
             self.add_lines("그림 1. 전략별 평가 비교. 고정 evaluation subset의 평균과 seed 표준편차입니다. 정확한 값은 원고의 표와 CSV 결과를 확인하십시오.", fontsize=9.0, width=92, color="#333333", line_step=0.017, after=0.006)
 
+    def add_contrast_figure(self) -> None:
+        path = self.figure_path.with_name("paired_contrast.png")
+        if path.exists():
+            height = 0.31
+            self.ensure_space(height + 0.09)
+            axis = self.fig.add_axes([0.08, self.y - height, 0.84, height])
+            axis.imshow(plt.imread(path), aspect="auto")
+            axis.axis("off")
+            self.y -= height + 0.012
+            self.add_lines("그림 2. Random 기준 paired bootstrap contrast입니다. 점은 효과 추정치이고 선은 95% confidence interval입니다.", fontsize=9.0, width=92, color="#333333", line_step=0.017, after=0.006)
+
     def render_title_page(self, title: str, meta: list[str], abstract: str) -> None:
         self.add_lines(title, fontsize=20, width=86, color="#142d45", line_step=0.030, after=0.012, bold=True)
         for line in meta:
@@ -310,7 +327,11 @@ def main() -> None:
         table_number = 0
         figure_added = False
         for block_index, block in enumerate(blocks):
-            if block.kind in {"meta", "figure"}:
+            if block.kind == "meta":
+                continue
+            if block.kind == "figure":
+                if "paired contrast" in str(block.value).lower():
+                    document.add_contrast_figure()
                 continue
             if block.kind == "heading":
                 level, value = block.value
@@ -324,7 +345,7 @@ def main() -> None:
                     None,
                 )
                 if level >= 3 and next_block is not None and next_block.kind == "table":
-                    document.ensure_space(0.37)
+                    document.ensure_space(0.50)
                 document.add_heading(level, value)
             elif block.kind == "paragraph":
                 if block.value == abstract or str(block.value).startswith("핵심어:"):

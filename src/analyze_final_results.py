@@ -354,9 +354,68 @@ def make_plot(aggregate_rows: list[dict[str, Any]], output_path: Path) -> None:
     axes[0].set_ylabel("정확도")
     axes[3].set_ylabel("정확도")
     axes[-1].axis("off")
+    axes[-1].text(
+        0.5,
+        0.52,
+        "BBH 최저 task\\n모든 정책에서 0.00%",
+        ha="center",
+        va="center",
+        fontsize=11,
+        color="#183b56",
+    )
     fig.suptitle("고정 토큰 영어 SFT 데이터 선택 비교", fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+
+
+def make_paired_plot(bootstrap_rows: list[dict[str, Any]], output_path: Path) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.font_manager import fontManager
+
+    korean_font = Path(r"C:\Windows\Fonts\malgun.ttf")
+    if korean_font.exists():
+        fontManager.addfont(str(korean_font))
+        plt.rcParams["font.family"] = "Malgun Gothic"
+        plt.rcParams["axes.unicode_minus"] = False
+
+    labels = {
+        "ifeval_prompt_strict": "IFEval prompt strict",
+        "ifeval_instruction_strict": "IFEval instruction strict",
+        "gsm8k_accuracy": "GSM8K",
+        "bbh_accuracy": "BBH",
+    }
+    metrics = list(labels)
+    treatments = [("quality", "Quality - random", "#0f766e", -0.10), ("diversity", "Diversity - random", "#d97706", 0.10)]
+    fig, axis = plt.subplots(figsize=(8.8, 4.5))
+    y = np.arange(len(metrics))
+    for treatment, label, color, offset in treatments:
+        rows = {row["metric"]: row for row in bootstrap_rows if row["treatment"] == treatment}
+        points = np.array([float(rows[metric]["point_estimate"]) * 100 for metric in metrics])
+        lower = np.array([float(rows[metric]["ci_95_lower"]) * 100 for metric in metrics])
+        upper = np.array([float(rows[metric]["ci_95_upper"]) * 100 for metric in metrics])
+        axis.errorbar(
+            points,
+            y + offset,
+            xerr=[points - lower, upper - points],
+            fmt="o",
+            color=color,
+            ecolor=color,
+            elinewidth=1.8,
+            capsize=3,
+            label=label,
+        )
+    axis.axvline(0, color="#374151", linewidth=1, linestyle="--")
+    axis.set_yticks(y, [labels[metric] for metric in metrics])
+    axis.set_xlabel("Random 대비 차이 (percentage points)")
+    axis.set_title("Paired bootstrap contrast와 95% confidence interval", fontsize=12)
+    axis.grid(axis="x", alpha=0.25)
+    axis.legend(loc="lower right", frameon=False)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -430,6 +489,7 @@ def main() -> None:
     try:
         make_plot(aggregate_rows, args.output_dir / "strategy_metrics.png")
         make_plot(aggregate_rows, args.output_dir / "strategy_metrics.pdf")
+        make_paired_plot(bootstrap_rows, args.output_dir / "paired_contrast.png")
     except ImportError:
         (args.output_dir / "plot_unavailable.txt").write_text("matplotlib is not installed; regenerate the plot in an environment with matplotlib.\n", encoding="utf-8")
 

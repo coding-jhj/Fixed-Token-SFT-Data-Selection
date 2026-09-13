@@ -48,6 +48,10 @@ Alignment data의 유용한 특성을 분석하는 연구는 단순한 데이터
 
 그러나 quality와 diversity를 결합한 점수가 항상 일반화 성능의 개선으로 이어지는 것은 아닙니다. Quality proxy가 실제 유용성을 충분히 반영하지 못하거나, diversity가 primary task에 필요한 행동을 희석할 수 있습니다. 본 연구는 새로운 universal quality function을 제안하지 않고, heuristic quality score와 embedding clustering을 고정하여 추가적인 측정 가능 이점이 있는지 검증합니다.
 
+이 선행 연구에서 남는 실험적 공백은 선택 정책의 효과와 학습량의 효과를 분리하는 일입니다. 행 수가 같아도 예시 길이가 다르면 모델이 본 실제 token 수가 달라지고, benchmark의 평가 subset이 조건마다 다르면 데이터 선택 효과와 평가 난이도 차이를 구분하기 어렵습니다. 따라서 본 연구는 더 복잡한 selector를 제안하기보다 비교의 단위를 formatted training token으로 고정하고, 같은 평가 ID를 모든 adapter에 반복 적용하는 설계를 택했습니다.
+
+이 설계는 두 가지 질문을 분리합니다. 첫째, quality-plus-diversity가 평균 성능을 높이는가를 primary IFEval 지표로 확인합니다. 둘째, 평균값이 비슷하더라도 특정 task에 대한 취약성을 줄이는지 BBH task 단위와 paired contrast로 확인합니다. 결과가 두 질문에 모두 답하지 못하더라도, 어느 단계에서 주장이 약해지는지를 재현 가능한 기록으로 남기는 것이 본 연구의 범위입니다.
+
 ### 2.3 본 연구의 차별점
 
 기존 논의와 달리 본 연구는 선택 정책의 비교 단위를 formatted training token으로 고정했습니다. 후보 행 수가 아니라 실제 모델 입력에 들어간 토큰 수를 budget으로 정의하고, 전체 평가 원천과 최종 deterministic subset을 분리했습니다. 그 결과 평균 점수뿐 아니라 paired contrast, seed 표준편차, 출력 completeness, generation-cap 진단을 함께 보고할 수 있습니다.
@@ -87,6 +91,14 @@ Quality score는 다음 다섯 요소의 가중합입니다. English signal과 A
 3. Diversity 선택은 동일한 quality floor을 통과한 행에 `sentence-transformers/all-MiniLM-L6-v2`의 normalized embedding을 계산하고, `MiniBatchKMeans`로 clustering했습니다. 클러스터 수는 filtered row 수를 n이라고 할 때 `min(n, max(2, round(sqrt(n))))`로 정하고 random state는 선택 seed로 고정했습니다. 각 cluster 안에서는 quality score와 stable ID 순으로 정렬한 뒤 cluster 간 round-robin으로 뽑고, source-by-length quota를 적용했습니다.
 
 세 정책 모두 마지막에 exact-token correction을 적용하고, 선택 seed 13과 42를 사용했습니다. 이 순서로 인해 diversity가 품질이 지나치게 낮은 예시를 보충하는 방식으로 작동하지 않도록 quality floor와 hard filter를 먼저 공유했습니다.
+
+선택 정책의 차이는 후보를 정렬하는 순서에만 두었습니다. 각 source와 length stratum의 quota는 전체 후보 token 비율에서 계산했고, 그 quota 아래에서 선택 순서를 적용한 뒤 마지막에 whole-example correction을 수행했습니다. 그러므로 quality와 diversity의 선택 행 수가 달라지는 것은 오류가 아니라 예시 길이 분포와 정확한 token 합계를 동시에 만족한 결과입니다. 이 절차는 선택 정책이 더 많은 optimizer update를 얻어서 유리해지는 경로를 줄이지만, 서로 다른 example composition 자체를 제거하지는 않습니다.
+
+구현에 사용한 quality proxy를 식으로 쓰면 다음과 같습니다.
+
+`Q(x) = 0.25E(x) + 0.25R(x) + 0.20L(x) + 0.20P(x) + 0.10A(x)`
+
+여기서 `E(x)`는 영어 신호와 ASCII 비율의 평균, `R(x)`는 assistant response의 단어 수를 80단어 기준으로 정규화한 값, `L(x)`는 32~1,536 token 구간에서 1.0이고 그 밖의 허용 길이에서 0.7인 값입니다. `P(x)`는 반복 억제 점수이고 `A(x)`는 NUL 또는 장문자 반복 artifact가 없을 때 1.0인 값입니다. 점수는 소수점 여섯째 자리에서 반올림했으며 0.55 미만인 행은 세 정책에서 모두 제외했습니다. 이 식은 사람의 정답성·사실성 판단을 대체하지 않는다는 점을 명시해야 합니다.
 
 ### 3.4 모델과 학습 조건
 
@@ -133,7 +145,13 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 
 최종 결과는 6개 adapter와 3개 benchmark의 18개 output file을 대상으로 검사했습니다. 파일별 예상 행 수와 실제 행 수, JSON parse error, duplicate ID, missing ID, extra ID, malformed score object, empty response를 확인했습니다. Decoded text를 다시 encoding한 token count가 generation cap 이상이면 possible truncation으로 표시했습니다. 이 flag는 원래 generated token ID가 저장되지 않은 상태에서 수행한 보수적 진단이므로, 모든 사례가 실제 truncation이었다고 단정하지 않습니다.
 
-### 3.8 계획 대비 실제 실행 범위
+### 3.8 분석 단위와 재현성 판정
+
+분석의 기본 단위는 adapter, benchmark, evaluation ID의 세 겹으로 고정했습니다. 평균과 표준편차는 두 seed의 adapter 수준 점수에서 계산하고, paired bootstrap은 동일한 evaluation ID를 먼저 두 seed에 걸쳐 평균한 뒤 재표집했습니다. 이 순서는 seed 간 변동을 별도의 독립 표본으로 과대 계산하지 않으면서도, 같은 문항에 대한 정책 간 차이를 직접 비교하기 위한 선택입니다. 따라서 보고된 confidence interval은 모델·데이터·benchmark 전체로 일반화되는 불확실성 구간이 아니라, 고정 subset에서의 paired contrast 구간입니다.
+
+무결성 검사는 성능 점수와 분리했습니다. 각 파일에 대해 예상 행 수, ID 중복·누락·추가, JSON parse error, score object 형식, 빈 응답을 검사한 뒤에만 점수를 집계했습니다. 반면 possible truncation은 구조적 오류가 아니라 길이 진단으로 취급했습니다. 이 분리는 유효한 JSON을 생성했다는 사실과 충분히 긴 답변을 생성했다는 주장을 혼동하지 않기 위해 필요합니다.
+
+### 3.9 계획 대비 실제 실행 범위
 
 | 변경 항목 | 계획 | 실제 실행 | 해석상 조치 |
 |---|---|---|---|
@@ -186,9 +204,22 @@ Parse error, duplicate ID, missing ID, extra ID, malformed score object, empty r
 
 값은 두 seed의 평균 ± 표준편차입니다. IFEval과 GSM8K/BBH percentage는 전체 원천 distribution이 아니라 고정 subset에서 계산했습니다. BBH task macro는 27개 task에 동일한 가중치를 주며, 각 task에서 동일한 8개 예시를 사용했습니다. 모든 조건에서 적어도 한 task의 정답 수가 0이었기 때문에 BBH minimum task accuracy는 세 정책 모두 0이었습니다.
 
-[그림 1. 전략별 평균과 seed 표준편차.]
+### 4.4 Seed별 결과와 변동성
 
-### 4.4 Paired contrast
+평균값만으로는 두 seed에서 효과의 방향이 같았는지 확인하기 어렵습니다. 따라서 각 adapter의 핵심 benchmark 점수를 별도로 제시합니다. 이 표의 IFEval, GSM8K, BBH는 각각 동일한 고정 subset에서 계산되었으며, 별도의 full benchmark 성능을 뜻하지 않습니다.
+
+| 정책 | Seed | IFEval prompt strict | GSM8K | BBH | BBH task macro |
+|---|---:|---:|---:|---:|---:|
+| Random | 13 | 13.02% | 21.09% | 25.46% | 25.46% |
+| Quality | 13 | 11.98% | 17.19% | 27.78% | 27.78% |
+| Diversity | 13 | 11.98% | 25.39% | 33.33% | 33.33% |
+| Random | 42 | 10.42% | 19.14% | 22.69% | 22.69% |
+| Quality | 42 | 9.90% | 25.00% | 25.93% | 25.93% |
+| Diversity | 42 | 10.94% | 20.31% | 33.80% | 33.80% |
+
+Diversity와 random의 seed별 차이는 IFEval prompt strict에서 seed 13은 -1.04 percentage points, seed 42는 +0.52 percentage points였습니다. 반면 BBH에서는 각각 +7.87과 +11.11 percentage points였고, GSM8K에서는 +4.30과 +1.17 percentage points였습니다. 이 비교는 BBH와 GSM8K의 방향이 두 seed에서 일관되었다는 점을 보여주지만, IFEval primary metric에서 일관된 개선이 없었다는 결론도 함께 뒷받침합니다.
+
+### 4.5 Paired contrast
 
 | Metric | Quality - random | Diversity - random |
 |---|---:|---:|
@@ -199,11 +230,26 @@ Parse error, duplicate ID, missing ID, extra ID, malformed score object, empty r
 
 구간은 두 seed별 score를 example ID별로 평균한 뒤 수행한 paired 95% bootstrap confidence interval입니다. 네 contrast 중 0을 포함하지 않는 것은 secondary BBH에서 diversity가 random보다 높은 경우뿐입니다. Primary IFEval contrast에는 0이 포함되므로 주가설 H1을 지지할 근거로 사용할 수 없습니다.
 
-### 4.5 보조 지표와 안정성
+[그림 2. Paired contrast와 95% confidence interval.]
+
+### 4.6 보조 지표와 안정성
 
 Diversity는 BBH에서 random보다 9.49 percentage points 높았고, 두 seed 표준편차도 0.33으로 낮았습니다. 그러나 동일한 diversity 정책이 IFEval에서는 random보다 낮았고, IFEval instruction-level strict에서도 -1.35 percentage points였습니다. 따라서 diversity의 효과는 benchmark가 측정하는 행동에 의존할 가능성이 있습니다.
 
 Quality의 GSM8K 표준편차는 5.52로 random의 1.38보다 컸습니다. 이 차이는 quality policy가 수학 문항에 안정적인 이점을 제공한다고 보기 어렵게 합니다. 다만 두 seed만으로 분산의 신뢰할 만한 추정치를 얻기는 어렵기 때문에, 이 관찰은 후속 seed 추가를 요구하는 신호로만 보고합니다.
+
+### 4.7 BBH task 수준 결과
+
+BBH의 전체 평균 차이가 소수의 task에만 의존하는지 확인하기 위해 27개 task를 seed별로 비교했습니다. 각 task에는 8개 example만 있으므로 한 task의 정확도는 12.5 percentage points 단위로 변합니다. 이산적인 점수 구조를 고려하지 않고 작은 차이를 정밀한 우열로 해석하지 않기 위해, task별 방향과 동률을 함께 집계했습니다.
+
+| 비교 단위 | Diversity > random | 동일 | Diversity < random |
+|---|---:|---:|---:|
+| Task-seed pair 54개 | 31 | 15 | 8 |
+| Task 27개 | 방향 요약은 seed pair 기준 | - | - |
+
+54개 task-seed 비교 중 diversity가 random보다 높은 경우는 31개, 동률은 15개, 낮은 경우는 8개였습니다. 이는 BBH 평균 상승이 한 seed의 단일 task에만 의해 만들어진 것은 아님을 시사하지만, task당 8개라는 작은 표본 때문에 강한 task별 일반화 주장으로 이어지지는 않습니다. 특히 BBH worst task는 모든 정책에서 0이었으므로, 평균 상승과 최저 task 개선은 서로 다른 결과로 보고해야 합니다.
+
+[그림 1. 전략별 평균과 seed 표준편차.]
 
 ## 5. 논의
 
@@ -224,6 +270,18 @@ Diversity가 BBH에서만 유리하게 나타난 것은 본 실험의 관찰입�
 이번 비교에서 가장 강한 결론은 특정 selector의 우승이 아니라 비교 방법에 관한 것입니다. Fixed-token accounting을 적용하면 row count가 다른 manifest도 공정하게 비교할 수 있습니다. Source-level license review와 revision pinning은 나중에 결과를 재생성할 수 있는 범위를 명확히 합니다. Deterministic subset, paired ID, raw output, validation report를 보존하면 음성 결과도 실험 오류와 구분할 수 있습니다.
 
 실무적으로는 하나의 quality score에 의존하여 데이터를 줄이기보다, 목표 task의 행동과 subset 설계를 함께 검토해야 합니다. Diversity가 secondary benchmark에서 높은 점수를 얻었다는 이유만으로 데이터 선택 정책을 운영에 바로 적용하기보다, 긴 generation cap과 추가 seed로 효과를 먼저 확인해야 합니다.
+
+### 5.4 Seed별 효과의 일관성
+
+Seed별 결과는 평균값을 해석할 때 필요한 경계를 보여줍니다. IFEval prompt strict에서 diversity는 seed 13에서는 random보다 낮았지만 seed 42에서는 높았습니다. 반대로 BBH의 diversity 우위는 두 seed에서 모두 나타났고, GSM8K도 두 seed에서 같은 방향이었습니다. 따라서 “diversity가 모든 benchmark에서 안정적으로 개선된다”는 주장은 성립하지 않지만, “BBH subset에서 관찰된 차이가 seed 하나의 우연한 상승뿐이다”라고 단정하기도 어렵습니다.
+
+이 비대칭성은 primary metric을 사전에 지정한 이유를 설명합니다. 여러 benchmark 중 유리한 결과만 선택하면 선택 정책의 효과를 과장할 수 있으므로, IFEval에서의 paired contrast와 confidence interval을 주가설의 판정 기준으로 유지했습니다. BBH의 일관된 상승은 후속 검증의 우선순위를 높이는 탐색적 신호이지, H1을 뒤집는 근거는 아닙니다.
+
+### 5.5 생성 한도와 점수 해석의 경계
+
+이번 결과에서 가장 중요한 운영상 위험은 점수 자체보다 생성 길이입니다. IFEval에서는 1,152개 출력 중 1,114개, GSM8K에서는 1,536개 중 1,530개, BBH에서는 1,296개 중 1,293개가 possible truncation으로 표시되었습니다. 전체 3,984개 중 3,937개라는 비율은 응답이 구조적으로 파싱되었다는 사실과 문제를 끝까지 풀었다는 사실을 분리해서 보아야 함을 뜻합니다.
+
+이 진단은 decoded text를 다시 tokenizer에 넣어 generation cap 이상인지 확인한 보수적 flag입니다. 원래 generated token ID가 보존되지 않았기 때문에 실제 truncation의 확정 판정은 아닙니다. 그러나 GSM8K와 BBH에서 cap에 도달한 비율이 특히 높다는 사실은 후속 실험에서 더 긴 generation limit을 먼저 검증해야 한다는 충분한 근거가 됩니다. 이 절차 없이 현재의 BBH 상승을 완전한 reasoning 능력의 개선으로 표현해서는 안 됩니다.
 
 ## 6. 한계와 후속 실험
 
@@ -246,6 +304,21 @@ Workspace의 `work/selection_manifests/`에는 여섯 개 frozen selection manif
 분석 코드는 `src/analyze_final_results.py`, frozen evaluation 코드는 `src/evaluate_frozen.py`, subset 생성 코드는 `src/make_eval_subset.py`, 전체 재현 명령은 `scripts/reproduce_analysis.ps1`에 기록했습니다. Reproduction ZIP에는 manuscript, PDF, 실행 스크립트, 환경 고정 파일, processed result와 validation 자료를 포함했습니다. Raw BBH row는 redistribution license가 명확하지 않아 의도적으로 제외했으며, 대신 BBH revision, subset hash, task allocation, download/regeneration 절차를 포함했습니다.
 
 재현 시 먼저 고정된 Python 환경과 model/dataset revision을 확인하고, selection manifest의 token 합계와 example ID uniqueness를 검사해야 합니다. 이후 adapter별 output completeness를 검증한 다음 분석 스크립트를 실행합니다. Partial IFEval run과 32-row pilot은 pipeline 진단 기록이므로 final table의 통계에 합산하지 않습니다.
+
+## 부록 A. 재현 체크리스트
+
+아래 체크리스트는 결과를 다시 만들 때 확인해야 할 순서를 실행 산출물과 연결합니다. 각 단계는 다음 단계로 넘어가기 위한 검증 조건을 함께 갖습니다. 이 순서를 지키면 selection manifest의 변경, 평가 subset의 변경, 분석 결과의 변경을 서로 구분할 수 있습니다.
+
+| 단계 | 확인 항목 | 통과 조건 | 주요 산출물 |
+|---|---|---|---|
+| 1. 환경 | Python, CUDA, library version, GPU | 고정 환경과 GPU 정보 일치 | `reproduction/environment.lock` |
+| 2. 선택 | source revision, hard filter, quality floor | 6개 manifest의 token 합계가 각각 1,000,000 | `work/selection_manifests/` |
+| 3. 오염 검사 | IFEval train, GSM8K test, BBH test overlap | exact·near overlap 모두 0 | `work/selection_manifests/*contamination*` |
+| 4. 평가 | adapter별 row 수와 score object | 18개 파일이 예상 ID를 한 번씩 포함 | `work/results_final/validation.json` |
+| 5. 분석 | seed 평균, paired bootstrap, task 요약 | 분석 CSV와 figure가 동일 입력에서 재생성 | `work/results_final/` |
+| 6. 문서 | 원고와 결과 파일의 수치 일치 | PDF와 원고의 결론·한계 일치 | `paper/manuscript.md`, `paper/paper.pdf` |
+
+이 표의 통과 조건은 성능이 높다는 뜻이 아니라, 같은 입력과 같은 판정 규칙으로 결과를 다시 만들 수 있다는 뜻입니다. 특히 raw benchmark output을 공개하지 않는 환경에서는 revision, subset hash, output manifest, validation report를 함께 보존해야 결과의 provenance를 확인할 수 있습니다.
 
 ## 참고문헌
 
