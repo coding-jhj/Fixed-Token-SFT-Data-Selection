@@ -201,3 +201,32 @@
 - `pdfinfo paper\\paper.pdf`: 21 pages, `595.44 x 841.68 pts (A4)`.
 - Rendered `work\\paper_pdf_render_tables_v3\\page-01.png` through `page-21.png`; all pages visually checked after the correction. No cell overflow, clipping, mixed page size, or orphaned heading was observed.
 - Reproduction ZIP will be rebuilt after this correction, then committed and pushed as the next publication fix.
+
+## 2026-09-13 follow-up execution
+
+### Scope authorized by user
+- Continue the remaining research-strengthening work without intermediate reports; provide only final results.
+- Preserve the original final evaluation and create separate outputs for any changed generation limit or added seed.
+
+### Active phases
+- Long-generation re-evaluation: same frozen subsets and six existing adapters, IFEval 1024 new tokens, GSM8K/BBH 256 new tokens, output directory `work/evaluation_long_generation/`.
+- Additional seed: reproduce selection and, if resources permit, train/evaluate seed 2026 for the three policies in separate directories.
+- After evidence is available: analyze, update Korean manuscript and reproduction metadata, render/inspect the complete PDF, rebuild ZIP, and publish.
+
+## 2026-09-13 handoff snapshot
+
+### Verified completed
+- Long-generation re-evaluation for six existing adapters: 3,984/3,984 rows, all files structurally valid, analysis written to `work/results_long_generation/`.
+- Long-generation limits: IFEval 1,024 and GSM8K/BBH 256 new tokens. Possible truncation remains 3,928/3,984 rows, so this is supplementary diagnostic evidence until manuscript integration.
+- Seed 2026 selection completed for random and diversity with exact 1,000,000 formatted training tokens.
+- Seed 2026 training completed for both adapters: random 995 rows/125 optimizer steps; diversity 1,027 rows/129 optimizer steps.
+- Handoff and supplementary result notes added under `work/`.
+
+### Current live status
+- Seed 2026 evaluation output directory: `work/evaluation_seed2026_long_generation/`.
+- Confirmed rows: 1,032/1,328 (77.7%): random 664/664; diversity IFEval 192/192, GSM8K 176/256, BBH 0/216.
+- Python evaluation process is still live (PID 2384 at the snapshot).
+
+### Next action
+- Let the current `--resume` evaluation finish. Then run `src/analyze_followup_results.py` for the two seed-2026 adapters, update the manuscript/README/provenance/ZIP builder, rebuild and visually inspect the PDF, and commit/push the follow-up integration.
+- Detailed commands and estimates: `work/HANDOFF_2026-09-13.md`.
