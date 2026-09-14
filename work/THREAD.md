@@ -338,6 +338,13 @@
 - Automatic quality audit verifies structural/heuristic integrity only; it does not establish factual correctness or usefulness.
 - AI judge uses the same locally cached Qwen3-1.7B-Base family and is not instruction-tuned or independent; its low parse rate and ceiling-heavy scores make it unsuitable for quantitative quality claims.
 
-### Remaining publication actions
+### Publication actions (completed)
 - Rebuild and verify the curated reproduction ZIP with the new audit scripts and aggregate reports while excluding blind text, answer key, per-item AI scores, raw benchmark JSONL, and adapter weights.
 - Run final package/file checks, inspect `git diff`, commit the quality-audit extension, and push only to `origin/main`; leave `master` unchanged.
+
+### Final verification
+- Curated ZIP rebuilt with 89 entries; `testzip=None`, zero `.jsonl` entries, and zero model-weight entries. Audit aggregate reports and scripts are included; blind text, answer key, per-item AI scores, raw benchmark JSONL, and adapter weights remain excluded.
+- `paper/paper.pdf`: 24 pages, all A4 (`595.44 x 841.68 pts`); full rendered page set and contact sheet reviewed after regeneration.
+- `work/results_reliability/validation_followup.json`: `all_checks_pass=true`, automatic quality audit valid, seed-2026 and expanded outputs complete.
+- Publication commit `6fcaafe Add transparent quality audit evidence` pushed to `origin/main`; `origin/main` resolves to `6fcaafede2570ebe8ae1644231083f9b81c9d6a0`, `origin/master` remains `efd91950b1800cc64fb61c64c09f23c79dc83f95`, and the worktree is clean.
+- Actual human rating remains unperformed; this is an explicit limitation, not an inferred or fabricated result.
