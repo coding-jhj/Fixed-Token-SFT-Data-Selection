@@ -30,7 +30,7 @@ Post-training 성능은 어떤 행동을 학습하는지, 어떤 예시를 포�
 
 - 고정된 1,000,000 formatted-token 예산 아래에서 세 가지 선택 정책과 두 개의 seed를 동일 조건으로 비교했습니다.
 - 데이터 source revision, license 범위, contamination 검사, 평가 subset manifest, 출력 무결성 검사를 함께 보존했습니다.
-- 세 번째 seed, frozen base-model baseline, 고정 subset·manifest·출력 회귀검사를 추가하고, 실제 사람이 평가하지 않은 human audit은 준비 자료와 미실행 상태를 분리해 기록했습니다.
+- 세 번째 seed, frozen base-model baseline, 고정 subset·manifest·출력 회귀검사를 추가하고, 자동 structural audit과 AI-assisted exploratory audit을 실제 human rating과 분리해 기록했습니다.
 
 본 연구는 특정 데이터 선택기가 모든 모델과 모든 task에서 최적이라는 주장을 하지 않습니다. 하나의 English data pool, 하나의 base model, 하나의 embedding model, 하나의 토큰 예산에서 관찰되는 효과를 검증하는 resource-constrained study입니다.
 
@@ -100,6 +100,8 @@ Quality score는 다음 다섯 요소의 가중합입니다. English signal과 A
 
 여기서 `E(x)`는 영어 신호와 ASCII 비율의 평균, `R(x)`는 assistant response의 단어 수를 80단어 기준으로 정규화한 값, `L(x)`는 32~1,536 token 구간에서 1.0이고 그 밖의 허용 길이에서 0.7인 값입니다. `P(x)`는 반복 억제 점수이고 `A(x)`는 NUL 또는 장문자 반복 artifact가 없을 때 1.0인 값입니다. 점수는 소수점 여섯째 자리에서 반올림했으며 0.55 미만인 행은 세 정책에서 모두 제외했습니다. 이 식은 사람의 정답성·사실성 판단을 대체하지 않는다는 점을 명시해야 합니다.
 
+추가 신뢰성 점검으로 여덟 개 selected manifest의 8,144개 row를 자동 audit했습니다. 3,794개의 unique example ID가 확인되었고, manifest 간 1,827개 ID 중복은 seed·policy 간 재사용으로 기록했습니다. 모든 row가 유효한 message 구조, user·assistant message, non-empty assistant response, assistant-last 구조를 통과했으며, stored quality score와 local 재계산의 불일치는 0건이었습니다. 장문자 반복 flag 1건과 8단어 미만 assistant response flag 6건은 review 후보로 보존했지만 자동 탈락시키지 않았습니다. 이 검사는 heuristic·구조 무결성만 확인하며 factual correctness나 human quality agreement를 검증하지 않습니다.
+
 ### 3.4 모델과 학습 조건
 
 Base model과 tokenizer는 `Qwen/Qwen3-1.7B-Base`이며 revision은 `ea980cb0a6c2ae4b936e82123acc929f1cec04c1`로 고정했습니다. 4-bit NF4 quantization, double quantization, fp16 compute를 사용했습니다. LoRA는 rank 16, alpha 32, dropout 0.05이며 target module은 `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`입니다.
@@ -147,6 +149,8 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 
 최종 결과는 6개 adapter와 3개 benchmark의 18개 output file을 대상으로 검사했습니다. 파일별 예상 행 수와 실제 행 수, JSON parse error, duplicate ID, missing ID, extra ID, malformed score object, empty response를 확인했습니다. Decoded text를 다시 encoding한 token count가 generation cap 이상이면 possible truncation으로 표시했습니다. 이 flag는 원래 generated token ID가 저장되지 않은 상태에서 수행한 보수적 진단이므로, 모든 사례가 실제 truncation이었다고 단정하지 않습니다.
 
+학습 데이터에 대해서는 선택 manifest 전체를 대상으로 별도 automatic quality audit을 수행했습니다. 이 audit은 message schema, role 존재 여부, assistant-last 여부, 비어 있는 response, 표면적 반복·artifact flag, 그리고 선택 코드의 quality heuristic 재계산 일치 여부를 확인했습니다. 별도로 준비한 200-example blind sheet에는 실제 사람의 rating을 입력하지 않았고, 로컬 Qwen3 base model을 이용한 AI-assisted exploratory judge 결과가 있더라도 human audit 또는 human agreement로 해석하지 않습니다.
+
 ### 3.8 분석 단위와 재현성 판정
 
 분석의 기본 단위는 adapter, benchmark, evaluation ID의 세 겹으로 고정했습니다. 평균과 표준편차는 두 seed의 adapter 수준 점수에서 계산하고, paired bootstrap은 동일한 evaluation ID를 먼저 두 seed에 걸쳐 평균한 뒤 재표집했습니다. 이 순서는 seed 간 변동을 별도의 독립 표본으로 과대 계산하지 않으면서도, 같은 문항에 대한 정책 간 차이를 직접 비교하기 위한 선택입니다. 따라서 보고된 confidence interval은 모델·데이터·benchmark 전체로 일반화되는 불확실성 구간이 아니라, 고정 subset에서의 paired contrast 구간입니다.
@@ -160,7 +164,7 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 | IFEval 전체 평가 | 541 prompts 전체 | 183행에서 비용 문제로 중단 | partial run은 diagnostic으로만 보존 |
 | 최종 평가 | full benchmark 우선 | 고정 balanced subset 사용 | 최종 표에 subset임을 명시 |
 | 추가 seed | seed 2026 추가 | random·diversity만 완료 | 3-policy 3-seed replication으로 과장하지 않음 |
-| human audit | 200-example quality audit | 수행하지 않음 | quality score를 heuristic으로 기술 |
+| quality audit | 200-example blind sheet와 manifest structural audit | blind sheet·rubric 준비, 8,144-row automatic audit 완료; 실제 human rating은 수행하지 않음 | 자동 점검과 human evidence를 분리 |
 | 회귀 평가 | artifact·schema·token·문서 검사 | 완료 | general-capability 개선과 구분 |
 | base baseline | 동일 subset frozen baseline | 완료 | full official benchmark와 구분 |
 | 확장 subset | 2배 fixed subset | subset·오염 검사·random/diversity 성능 평가 완료 | primary 및 3-seed 결과와 별도 protocol로 보고 |
@@ -319,23 +323,23 @@ Seed별 결과는 평균값을 해석할 때 필요한 경계를 보여줍니다
 
 ## 6. 한계와 후속 실험
 
-첫째, 모델은 1.7B parameter에 불과하므로 더 큰 모델에 결과가 전이된다고 보장할 수 없습니다. 둘째, quality proxy는 heuristic이며 200-example human audit용 blind sheet와 rubric은 준비했지만 실제 사람의 rating은 수행하지 않았습니다. 셋째, 최종 비교는 전체 benchmark distribution이 아닌 resource-constrained deterministic subset에 기반합니다. 넷째, 3,984개 출력 중 3,937개와 seed 2026 추가 출력 1,328개 중 1,318개가 generation cap에 도달했을 가능성이 있어, 특히 GSM8K와 BBH 결과에 불완전한 응답의 영향이 있을 수 있습니다.
+첫째, 모델은 1.7B parameter에 불과하므로 더 큰 모델에 결과가 전이된다고 보장할 수 없습니다. 둘째, quality proxy는 heuristic이며, 8,144개 selected row의 automatic structural audit은 수행했지만 200-example blind sheet에 실제 사람의 rating은 입력하지 않았습니다. 셋째, 최종 비교는 전체 benchmark distribution이 아닌 resource-constrained deterministic subset에 기반합니다. 넷째, 3,984개 출력 중 3,937개와 seed 2026 추가 출력 1,328개 중 1,318개가 generation cap에 도달했을 가능성이 있어, 특히 GSM8K와 BBH 결과에 불완전한 응답의 영향이 있을 수 있습니다.
 
 다섯째, seed 2026은 random과 diversity만 실행했으므로 세 정책의 완전한 3-seed replication이 아닙니다. 여섯째, frozen base-model baseline은 동일한 subset에서 수행했지만 full official benchmark baseline은 아닙니다. 일곱째, artifact·schema·token·문서 회귀검사는 추가했지만 broad helpfulness, fluency, safety를 측정하는 general-capability regression suite는 수행하지 않았습니다. 여덟째, 2배 확장 subset의 random/diversity 성능도 완료했지만 single-seed·별도 subset 결과이므로 primary 및 3-seed 결과와 분리해 해석합니다. 아홉째, 하나의 English data pool, 하나의 embedding model, 하나의 token budget만 비교했습니다. 마지막으로 BBH raw row는 conversion card의 redistribution license가 audit에서 명확하지 않아 reproduction ZIP에 포함하지 않았습니다.
 
-남은 후속 과제는 generation cap을 더 높인 stress test, 실제 human rating, full benchmark, general-capability regression suite, 더 큰 model과 다른 data pool 재현입니다. 이 과제들은 현재 결과를 대체하지 않고 별도 protocol로 관리해야 합니다.
+남은 후속 과제는 generation cap을 더 높인 stress test, 실제 human rating, full benchmark, general-capability regression suite, 더 큰 model과 다른 data pool 재현입니다. 로컬 Qwen3 base model을 이용한 AI-assisted exploratory judge는 human rating의 대체가 아니며, 동일 model 계열을 사용하므로 독립적인 평가자로도 취급하지 않습니다. 이 과제들은 현재 결과를 대체하지 않고 별도 protocol로 관리해야 합니다.
 
 ## 7. 결론
 
 고정된 1,000,000 formatted-token QLoRA budget과 Qwen3-1.7B-Base 조건에서 quality-plus-diversity 선택은 사전에 정한 IFEval prompt-level strict accuracy를 안정적으로 개선하지 못했습니다. 추가 seed를 random과 diversity에 한정해도 이 primary 결론은 유지되었습니다. 확장 subset의 단일 seed robustness에서는 diversity가 IFEval·GSM8K·BBH에서 모두 높았지만, IFEval 구간은 0을 포함하고 GSM8K·BBH 결과도 generation-cap과 subset 범위를 고려해야 하므로 일반적 우위로 해석할 수 없습니다. Frozen base-model baseline은 SFT와 selector 효과를 분리하는 참고점을 제공하지만, broad capability 향상을 입증하지는 않습니다. 따라서 본 연구의 결론은 “diversity가 항상 좋다”가 아니라, 데이터 선택 정책의 효과가 task와 평가 설계에 의존하며 고정 예산·고정 subset·무결성 검사를 갖춘 비교가 필요하다는 것입니다.
 
-본 연구는 여섯 개 primary adapter, seed 2026 random/diversity adapter, frozen base-model baseline, 확장 subset robustness 평가의 기록과 exact-token manifest, validation report, 3-seed random/diversity paired bootstrap, artifact regression report, human-audit preparation materials를 함께 제공합니다. 실제 human rating, full official benchmark, general-capability regression suite는 수행 범위 밖으로 명시합니다.
+본 연구는 여섯 개 primary adapter, seed 2026 random/diversity adapter, frozen base-model baseline, 확장 subset robustness 평가의 기록과 exact-token manifest, validation report, 3-seed random/diversity paired bootstrap, artifact regression report, automatic quality-audit report, human-audit preparation materials를 함께 제공합니다. 실제 human rating, full official benchmark, general-capability regression suite는 수행 범위 밖으로 명시합니다.
 
 ## 데이터와 코드 공개 및 재현 절차
 
 Workspace의 `work/selection_manifests/`와 `work/selection_manifests_seed2026/`에는 frozen selection manifest와 token summary가 있습니다. `work/evaluation_subsets_final/`에는 primary subset, `work/evaluation_subsets_expanded/`에는 확장 subset manifest와 hash가 있습니다. `work/main_*`에는 adapter run summary와 training log가 있고, `work/evaluation_final_balanced/`에는 primary output, `work/evaluation_seed2026_long_generation/`에는 추가 seed output, `work/evaluation_base_long_generation/`에는 frozen base output, `work/evaluation_expanded_long_generation/`에는 확장 subset output이 있습니다. `work/results_final/`, `work/results_seed2026_long_generation/`, `work/results_seed_robustness/`, `work/results_base_long_generation/`, `work/results_expanded_long_generation/`, `work/results_reliability/`에는 processed metric과 validation 자료가 있습니다.
 
-분석 코드는 `src/analyze_final_results.py`, `src/analyze_followup_results.py`, `scripts/analyze_seed_robustness.py`, frozen evaluation 코드는 `src/evaluate_frozen.py`, subset 생성 코드는 `src/make_eval_subset.py`, artifact 회귀검사는 `scripts/validate_followup_artifacts.py`, human audit 준비는 `scripts/prepare_human_audit.py`에 기록했습니다. Reproduction ZIP에는 manuscript, PDF, 실행 스크립트, 환경 고정 파일, processed result와 validation 자료를 포함했습니다. Raw BBH row와 raw benchmark JSONL은 redistribution license와 패키지 정책 때문에 제외했으며, 대신 revision, subset hash, task allocation, download/regeneration 절차를 포함했습니다.
+분석 코드는 `src/analyze_final_results.py`, `src/analyze_followup_results.py`, `scripts/analyze_seed_robustness.py`, frozen evaluation 코드는 `src/evaluate_frozen.py`, subset 생성 코드는 `src/make_eval_subset.py`, artifact 회귀검사는 `scripts/validate_followup_artifacts.py`, automatic quality audit은 `scripts/run_automatic_quality_audit.py`, AI-assisted exploratory audit은 `scripts/run_ai_assisted_quality_audit.py`, human audit 준비는 `scripts/prepare_human_audit.py`에 기록했습니다. Reproduction ZIP에는 manuscript, PDF, 실행 스크립트, 환경 고정 파일, processed result와 validation 자료를 포함했습니다. Raw BBH row와 raw benchmark JSONL은 redistribution license와 패키지 정책 때문에 제외했으며, 대신 revision, subset hash, task allocation, download/regeneration 절차를 포함했습니다.
 
 재현 시 먼저 고정된 Python 환경과 model/dataset revision을 확인하고, selection manifest의 token 합계와 example ID uniqueness를 검사해야 합니다. 이후 adapter별 output completeness를 검증한 다음 분석 스크립트를 실행합니다. Partial IFEval run과 32-row pilot은 pipeline 진단 기록이므로 final table의 통계에 합산하지 않습니다.
 

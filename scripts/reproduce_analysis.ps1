@@ -53,6 +53,22 @@ if (Test-Path -LiteralPath "work\evaluation_base_long_generation") {
     --bootstrap-repetitions 10000
 }
 
+$qualityAuditArgs = @(
+  "scripts\run_automatic_quality_audit.py",
+  "--manifest", "work\selection_manifests\manifest_random_seed13.jsonl",
+  "--manifest", "work\selection_manifests\manifest_random_seed42.jsonl",
+  "--manifest", "work\selection_manifests\manifest_quality_seed13.jsonl",
+  "--manifest", "work\selection_manifests\manifest_quality_seed42.jsonl",
+  "--manifest", "work\selection_manifests\manifest_diversity_seed13.jsonl",
+  "--manifest", "work\selection_manifests\manifest_diversity_seed42.jsonl",
+  "--manifest", "work\selection_manifests_seed2026\manifest_random_seed2026.jsonl",
+  "--manifest", "work\selection_manifests_seed2026\manifest_diversity_seed2026.jsonl",
+  "--audit-key", "work\human_audit_200\answer_key.jsonl",
+  "--audit-sampling-manifest", "work\human_audit_200\sampling_manifest.csv",
+  "--output-dir", "work\human_audit_200"
+)
+& $pythonExe @qualityAuditArgs
+
 if ((Test-Path -LiteralPath "work\evaluation_seed2026_long_generation") -and (Test-Path -LiteralPath "work\results_reliability")) {
   $validationArgs = @(
     "scripts\validate_followup_artifacts.py",
@@ -72,6 +88,9 @@ if ((Test-Path -LiteralPath "work\evaluation_seed2026_long_generation") -and (Te
   )
   if (Test-Path -LiteralPath "work\evaluation_expanded_long_generation") {
     $validationArgs += @("--expanded-output", "work\evaluation_expanded_long_generation")
+  }
+  if (Test-Path -LiteralPath "work\human_audit_200\automatic_quality_audit_summary.json") {
+    $validationArgs += @("--quality-audit-summary", "work\human_audit_200\automatic_quality_audit_summary.json")
   }
   & $pythonExe @validationArgs
 }

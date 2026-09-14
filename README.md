@@ -17,6 +17,7 @@
 - random/diversity seed 2026을 추가한 3-seed paired 분석에서 IFEval은 `-0.69 pp` (95% CI `[-3.30, 1.91]`), BBH는 `+7.72 pp` (95% CI `[3.40, 12.19]`)였습니다. quality seed 2026은 수행하지 않았습니다.
 - 동일 subset의 frozen base-model baseline은 IFEval `13.02%`, GSM8K `43.75%`, BBH `28.70%`였습니다. adapter strategy 평균에는 포함하지 않았습니다.
 - 확장 subset(seed 2026, IFEval 384/GSM8K 512/BBH 432)에서 diversity minus random은 IFEval `+1.30 pp` (95% CI `[-2.34, 4.95]`), GSM8K `+5.66 pp` (`[0.39, 10.94]`), BBH `+6.25 pp` (`[1.62, 11.11]`)였습니다. 이는 단일 seed의 별도 robustness protocol입니다.
+- 여덟 개 selected manifest, 총 `8,144` rows의 automatic quality audit에서 모든 row가 message 구조 검사를 통과했고, stored heuristic 재계산 불일치는 `0`건이었습니다. 장문자 반복 flag `1`건과 8단어 미만 assistant response flag `6`건은 review 후보로만 기록했습니다.
 
 ## 실험 조건
 
@@ -49,6 +50,7 @@
 - `work/results_base_long_generation/`: frozen base-model baseline 분석 결과
 - `work/results_expanded_long_generation/`: 확장 subset random/diversity 분석 결과
 - `work/results_reliability/`: token·schema·ID·subset 회귀검사 결과
+- `work/human_audit_200/`: blind audit 준비 자료와 automatic/AI-assisted audit의 로컬 결과(사람의 rating 없음)
 - `reproduction/`: 재현 패키지 보조 문서
 
 ## 후속 검증 현황
@@ -59,8 +61,8 @@
 - 2배 fixed subset을 구성하고 여덟 개 training manifest에 대한 expanded benchmark contamination 검사에서 exact·near overlap `0`을 확인했습니다.
 - 확장 subset 성능 평가도 2개 adapter, 3개 benchmark, `2,656/2,656`행 완료했으며 구조 검사를 통과했습니다. Possible truncation은 random `1,318/1,328`, diversity `1,322/1,328`이었습니다.
 - 전체 기준별 상태와 신뢰도 강화 계획은 [`work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md`](work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md)에 기록했습니다.
-- 내일 재개 명령과 보존된 중간 결과는 [`work/HANDOFF_2026-09-13.md`](work/HANDOFF_2026-09-13.md)에 있습니다.
+- 보존된 중간 결과와 재현 명령은 [`work/HANDOFF_2026-09-13.md`](work/HANDOFF_2026-09-13.md)에 있습니다.
 
 ## 한계
 
-현재 primary 결과는 1.7B base model, 하나의 영어 데이터 풀, 두 개 seed, 고정 subset, 제한된 generation budget에 대한 결과입니다. 추가 seed는 random/diversity에 한정되며, 확장 subset 결과도 별도 single-seed robustness evidence입니다. Human rating·full official benchmark·general-capability regression suite는 완료하지 않았습니다.
+현재 primary 결과는 1.7B base model, 하나의 영어 데이터 풀, 두 개 seed, 고정 subset, 제한된 generation budget에 대한 결과입니다. 추가 seed는 random/diversity에 한정되며, 확장 subset 결과도 별도 single-seed robustness evidence입니다. Automatic audit은 구조·표면 패턴·heuristic 재현성만 점검합니다. 200-example blind sheet에는 실제 human rating을 입력하지 않았고, 동일한 Qwen3 base model을 사용한 AI-assisted judge도 200개 중 55개만 두 prompt에서 parse되어 human audit이나 독립 검증으로 볼 수 없습니다. Full official benchmark·general-capability regression suite도 완료하지 않았습니다.

@@ -322,3 +322,22 @@
 - `git diff --cached --check` passed before commit; the worktree was clean after push.
 - Publication commit: `7d19c3e Integrate follow-up reliability evidence`.
 - Remote verification: `origin/main` points to `7d19c3e5dd47778be70f92ea1ecc5145e87d9189`; `origin/master` remains `efd91950b1800cc64fb61c64c09f23c79dc83f95`.
+
+## 2026-09-14 quality-audit extension
+
+### Completed
+- Added `scripts/run_automatic_quality_audit.py` and audited all eight selected manifests: 8,144 manifest rows, 3,794 unique example IDs, 1,827 cross-manifest duplicate IDs, and 0 stored-vs-recomputed quality-score mismatches.
+- All 8,144 rows passed message-list, valid-role, user-present, assistant-present, non-empty-assistant, and assistant-last checks. Surface review flags were 1 long repeated-character run and 6 short assistant responses; these remain review candidates, not automatic failures.
+- The pre-generated 200-example blind sheet has 200 unique IDs and all 200 source-manifest lookups succeed. Added `work/human_audit_200/assistant_qualitative_spot_check.md` for a limited assistant-led first-20 review; it is explicitly not human rating.
+- Ran the local-model AI-assisted exploratory judge over all 200 items with two rubric prompt variants. Only 55/200 items parsed in both passes (27.5%); parsed scores were weakly discriminative (49/55 overall scores at 5/5), so the result is retained as a failed/limited proxy attempt and is not used as human evidence or manuscript performance evidence.
+- Updated manuscript, root/reproduction README, changelog, provenance, ZIP builder, validation, and reproduction script to distinguish automatic checks, assistant/model-assisted audit, and actual human rating.
+- Rebuilt `paper/paper.pdf`: 24 pages, all A4 (`595.44 x 841.68 pts`), rendered all pages to `work/paper_pdf_render_audit_v1/` and checked the contact sheet plus table/appendix pages for clipping, overflow, mixed sizes, and orphan headings.
+
+### Interpretation boundary
+- No actual human rater participated. The prepared blind materials and assistant/model-assisted checks cannot be called a human audit.
+- Automatic quality audit verifies structural/heuristic integrity only; it does not establish factual correctness or usefulness.
+- AI judge uses the same locally cached Qwen3-1.7B-Base family and is not instruction-tuned or independent; its low parse rate and ceiling-heavy scores make it unsuitable for quantitative quality claims.
+
+### Remaining publication actions
+- Rebuild and verify the curated reproduction ZIP with the new audit scripts and aggregate reports while excluding blind text, answer key, per-item AI scores, raw benchmark JSONL, and adapter weights.
+- Run final package/file checks, inspect `git diff`, commit the quality-audit extension, and push only to `origin/main`; leave `master` unchanged.

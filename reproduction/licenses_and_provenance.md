@@ -12,6 +12,8 @@
 
 전체 audit는 workspace의 `work/data_audit.md`에 보존되어 있습니다. 이 패키지는 재생성한 subset 파일이 실험을 조용히 변경하지 않았는지 확인할 수 있도록 hash와 선택 ID를 포함합니다.
 
+선택 데이터의 automatic quality audit summary는 `human_audit/automatic_quality_audit_summary.json`과 `human_audit/automatic_quality_audit_report.md`에 보존합니다. 이는 message 구조·heuristic 재계산·표면 flag 검사이며, 사람의 factual-quality rating이 아닙니다. 200-example blind sheet와 rubric은 실제 사람의 rating을 포함하지 않습니다.
+
 2026-09-14 후속 검증에서는 동일한 고정 원천에서 IFEval 384, GSM8K 512, BBH 432의 expanded subset을 별도로 생성했습니다. 이 subset은 seed 2027로 선택했고, 여덟 개 SFT manifest에 대해 GSM8K·BBH exact 및 normalized near overlap(threshold 0.92)을 다시 검사했습니다. 모든 검사에서 overlap은 0이었습니다. Expanded raw benchmark JSONL은 기존 redistribution 정책과 동일하게 ZIP에 포함하지 않고, subset manifest·hash·재생성 명령만 보존합니다.
 
 Expanded subset 성능 출력은 seed 2026 random/diversity에 대해 별도 protocol로 생성했으며, ZIP에는 raw JSONL 대신 처리된 metric·validation·paired bootstrap 결과와 raw output의 SHA-256 manifest만 포함합니다.

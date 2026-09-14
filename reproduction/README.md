@@ -35,4 +35,4 @@ Primary IFEval prompt-level strict에서 diversity minus random 차이는 -0.26 
 - `environment.lock`: 검증된 연구 환경 버전과 hardware 기록.
 - `licenses_and_provenance.md`: source revision과 redistribution 범위.
 - `../work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md`: 다섯 기준별 현재 상태, 신뢰도 강화 범위와 예상 시간.
-- Human audit 자료는 `work/human_audit_200/`에 blind sheet와 rubric을 준비했지만 실제 사람의 rating은 포함하지 않습니다.
+- Quality audit 자료는 200-example blind sheet·rubric과 8개 selected manifest의 automatic structural audit report를 포함합니다. 실제 사람의 rating은 포함하지 않으며, 로컬 Qwen3 base model을 이용한 AI-assisted exploratory judge는 200개 중 55개만 두 prompt에서 parse되어 판별력이 낮았으므로 human audit 또는 human agreement로 해석하지 않습니다.

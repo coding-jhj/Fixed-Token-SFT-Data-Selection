@@ -104,6 +104,24 @@ def validate_fixed_token_summaries(paths: list[Path]) -> list[dict]:
     return reports
 
 
+def validate_quality_audit(path: Path | None) -> dict | None:
+    if path is None:
+        return None
+    if not path.exists():
+        return {"path": str(path), "valid": False, "reason": "missing"}
+    value = json.loads(path.read_text(encoding="utf-8"))
+    valid = (
+        value.get("audit_type", "").startswith("automatic structural")
+        and value.get("human_ratings_performed") is False
+        and value.get("manifest_count") == 8
+        and value.get("total_manifest_rows") == 8144
+        and value.get("stored_vs_recomputed_quality_mismatches", {}).get("count") == 0
+        and value.get("human_audit_sample", {}).get("n") == 200
+        and value.get("human_audit_sample", {}).get("found_in_manifests") == 200
+    )
+    return {"path": str(path), "valid": valid}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed-output", type=Path, required=True)
@@ -112,6 +130,7 @@ def main() -> None:
     parser.add_argument("--subset-dir", type=Path, required=True)
     parser.add_argument("--expanded-subset-dir", type=Path)
     parser.add_argument("--summary", action="append", type=Path, default=[])
+    parser.add_argument("--quality-audit-summary", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -122,6 +141,7 @@ def main() -> None:
         "expanded_subset": None,
         "expanded_outputs": {},
         "fixed_token_summaries": validate_fixed_token_summaries(args.summary),
+        "automatic_quality_audit": validate_quality_audit(args.quality_audit_summary),
     }
     for adapter in ["random_seed2026", "diversity_seed2026"]:
         report["seed2026"][adapter] = validate_outputs(args.seed_output / adapter, args.subset_dir, EXPECTED_FINAL)
@@ -144,6 +164,8 @@ def main() -> None:
     for adapter in report["expanded_outputs"].values():
         checks.extend(item["complete"] for item in adapter.values())
     checks.extend(item["valid"] for item in report["fixed_token_summaries"])
+    if report["automatic_quality_audit"] is not None:
+        checks.append(report["automatic_quality_audit"]["valid"])
     report["all_checks_pass"] = all(checks)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

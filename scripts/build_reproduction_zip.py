@@ -46,6 +46,8 @@ def main() -> None:
             "validate_followup_artifacts.py",
             "analyze_seed_robustness.py",
             "prepare_human_audit.py",
+            "run_automatic_quality_audit.py",
+            "run_ai_assisted_quality_audit.py",
         ):
             copy_file(stage, ROOT / "scripts" / filename, f"scripts/{filename}")
         for filename in ("analyze_final_results.py", "analyze_followup_results.py"):
@@ -96,6 +98,16 @@ def main() -> None:
                         copy_file(stage, path, f"results/{result_dir}/{path.name}")
         copy_file(stage, ROOT / "work/human_audit_200/rubric.md", "human_audit/rubric.md")
         copy_file(stage, ROOT / "work/human_audit_200/sampling_manifest.csv", "human_audit/sampling_manifest.csv")
+        for filename in (
+            "automatic_quality_audit_summary.json",
+            "automatic_quality_audit_report.md",
+            "ai_assisted_audit_summary.json",
+            "ai_assisted_audit_report.md",
+            "assistant_qualitative_spot_check.md",
+        ):
+            audit_path = ROOT / "work/human_audit_200" / filename
+            if audit_path.exists():
+                copy_file(stage, audit_path, f"human_audit/{filename}")
 
         raw_manifest = []
         for output_dir in (
@@ -124,7 +136,7 @@ def main() -> None:
         excluded = stage / "results/RAW_OUTPUTS_EXCLUDED.md"
         excluded.write_text(
             "# Raw output redistribution boundary\n\n"
-            "Raw evaluation JSONL files remain in the workspace under the primary and follow-up `work/evaluation_*` directories and are represented here only by size and SHA-256 metadata. They are not copied into this ZIP because the local audit did not establish a clear redistribution license for the BBH conversion source. Human audit blind text is also kept in the workspace; the ZIP contains only its rubric and sampling manifest.\n",
+            "Raw evaluation JSONL files remain in the workspace under the primary and follow-up `work/evaluation_*` directories and are represented here only by size and SHA-256 metadata. They are not copied into this ZIP because the local audit did not establish a clear redistribution license for the BBH conversion source. Human audit blind text, answer key, and per-item AI-assisted judge output are also kept in the workspace; the ZIP contains only audit rubrics, sampling metadata, and aggregate reports.\n",
             encoding="utf-8",
         )
 
