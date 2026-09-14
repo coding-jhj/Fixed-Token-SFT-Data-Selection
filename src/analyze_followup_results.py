@@ -115,6 +115,7 @@ def analyze_adapter(
     expected: dict[str, set[str]],
     tokenizer: Any,
     limits: dict[str, int],
+    expected_rows: dict[str, int],
 ) -> tuple[dict[str, Any], dict[str, dict[str, float]]]:
     validation: dict[str, Any] = {}
     metric_maps: dict[str, dict[str, float]] = {metric: {} for metric in METRICS}
@@ -149,7 +150,7 @@ def analyze_adapter(
         validation[benchmark] = {
             "path": str(path),
             "rows": len(rows),
-            "expected_rows": EXPECTED_ROWS[benchmark],
+            "expected_rows": expected_rows[benchmark],
             "parse_errors": parse_errors,
             "duplicate_ids": duplicate_ids,
             "missing_ids": sorted(expected[benchmark] - actual_ids),
@@ -250,6 +251,9 @@ def main() -> None:
     parser.add_argument("--tokenizer-revision", default="ea980cb0a6c2ae4b936e82123acc929f1cec04c1")
     parser.add_argument("--ifeval-max-new-tokens", type=int, default=1024)
     parser.add_argument("--benchmark-max-new-tokens", type=int, default=256)
+    parser.add_argument("--ifeval-rows", type=int, default=192)
+    parser.add_argument("--gsm8k-rows", type=int, default=256)
+    parser.add_argument("--bbh-rows", type=int, default=216)
     parser.add_argument("--bootstrap-repetitions", type=int, default=10000)
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -259,15 +263,16 @@ def main() -> None:
         name, strategy, seed_text = value.split("=", 2)
         adapter_specs.append((name, strategy, int(seed_text)))
     limits = {"ifeval": args.ifeval_max_new_tokens, "gsm8k": args.benchmark_max_new_tokens, "bbh": args.benchmark_max_new_tokens}
+    expected_rows = {"ifeval": args.ifeval_rows, "gsm8k": args.gsm8k_rows, "bbh": args.bbh_rows}
     from transformers import AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer, revision=args.tokenizer_revision, local_files_only=True)
     expected = expected_ids(args.subset_dir)
-    validation: dict[str, Any] = {"expected_rows": EXPECTED_ROWS, "limits": limits, "adapters": {}}
+    validation: dict[str, Any] = {"expected_rows": expected_rows, "limits": limits, "adapters": {}}
     metric_rows: list[dict[str, Any]] = []
     records: dict[str, dict[str, dict[str, float]]] = {}
     for name, strategy, seed in adapter_specs:
-        item_validation, item_data = analyze_adapter(args.evaluation_dir / name, name, strategy, seed, expected, tokenizer, limits)
+        item_validation, item_data = analyze_adapter(args.evaluation_dir / name, name, strategy, seed, expected, tokenizer, limits, expected_rows)
         validation["adapters"][name] = item_validation
         metric_rows.append(item_data["row"])
         records[name] = {"strategy": strategy, "seed": seed, "maps": item_data["maps"]}

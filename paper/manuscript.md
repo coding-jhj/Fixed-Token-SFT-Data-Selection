@@ -2,11 +2,11 @@
 
 **저자:** 정환주  
 **부제:** 품질·다양성 기반 선택이 영어 지시 수행에 미치는 영향  
-**작성일:** 2026-09-13
+**작성일:** 2026-09-14
 
 ## 초록
 
-Instruction-tuning 데이터 선택은 품질과 양의 문제로 자주 논의되지만, 선택 정책마다 학습 토큰 수가 다르거나 평가 예시가 달라지면 정책의 효과를 분리하기 어렵습니다. 본 연구는 포맷팅 후 학습 토큰 수를 정확히 고정한 자원 제약 조건에서 층화 random, quality-only, quality-plus-semantic-diversity 선택을 비교합니다. Qwen/Qwen3-1.7B-Base에 4-bit NF4 QLoRA supervised fine-tuning을 적용하고, 각 정책을 seed 13과 42에서 실행했습니다. 각 adapter는 정확히 1,000,000개의 formatted training token을 사용했습니다. 사전에 primary metric으로 지정한 deterministic IFEval subset의 prompt-level strict accuracy에서 diversity의 평균은 11.46%(SD 0.74)로 random의 11.72%(SD 1.84)보다 낮았으며, paired bootstrap 차이는 -0.26 percentage points, 95% confidence interval은 [-3.39, 2.60]이었습니다. 따라서 quality-plus-diversity가 영어 instruction following을 안정적으로 개선한다는 주가설은 지지되지 않았습니다. 다만 secondary BBH subset에서는 diversity가 33.56%로 random의 24.07%보다 높았고, paired 95% confidence interval은 [4.63, 14.58] percentage points였습니다. GSM8K의 우위는 불확실했습니다. 최종 평가의 3,984개 출력 행은 모두 구조적으로 유효했지만, 3,937개 행은 generation cap에 도달했을 가능성이 있는 것으로 진단되었습니다. 본 연구는 이 결과를 일반적 우위가 아닌 task-dependent evidence로 해석하고, 더 긴 생성 한도·추가 seed·human evaluation을 후속 과제로 남깁니다.
+Instruction-tuning 데이터 선택은 품질과 양의 문제로 자주 논의되지만, 선택 정책마다 학습 토큰 수가 다르거나 평가 예시가 달라지면 정책의 효과를 분리하기 어렵습니다. 본 연구는 포맷팅 후 학습 토큰 수를 정확히 고정한 자원 제약 조건에서 층화 random, quality-only, quality-plus-semantic-diversity 선택을 비교합니다. Qwen/Qwen3-1.7B-Base에 4-bit NF4 QLoRA supervised fine-tuning을 적용하고, 세 정책의 primary 비교는 seed 13과 42에서 실행했습니다. 각 adapter는 정확히 1,000,000개의 formatted training token을 사용했습니다. 사전에 지정한 IFEval prompt-level strict accuracy에서 diversity의 2-seed 평균은 11.46%(SD 0.74)로 random의 11.72%(SD 1.84)보다 낮았고, paired bootstrap 차이는 -0.26 percentage points, 95% confidence interval은 [-3.39, 2.60]이었습니다. 따라서 quality-plus-diversity가 영어 instruction following을 안정적으로 개선한다는 주가설은 지지되지 않았습니다. 추가로 random과 diversity만 seed 2026에서 재평가했으며, 세 seed를 함께 본 diversity-minus-random의 IFEval 차이는 -0.69 percentage points, 95% confidence interval은 [-3.30, 1.91]이었습니다. Secondary BBH에서는 세 seed 차이가 +7.72 percentage points, 95% confidence interval [3.40, 12.19]로 나타났지만 탐색적 결과로 유지합니다. 동일 subset의 frozen base-model baseline은 IFEval 13.02%, GSM8K 43.75%, BBH 28.70%였습니다. 모든 후속 출력은 구조적으로 유효했지만 generation-cap 도달 가능성 진단은 seed 2026 adapter에서 1,318/1,328행, 기존 6개 adapter에서 3,928/3,984행으로 높았습니다. 따라서 본 연구는 결과를 일반적 우위가 아닌 task-dependent evidence로 해석합니다.
 
 **핵심어:** instruction tuning, data selection, data diversity, QLoRA, fixed token budget, evaluation reproducibility
 
@@ -30,7 +30,7 @@ Post-training 성능은 어떤 행동을 학습하는지, 어떤 예시를 포�
 
 - 고정된 1,000,000 formatted-token 예산 아래에서 세 가지 선택 정책과 두 개의 seed를 동일 조건으로 비교했습니다.
 - 데이터 source revision, license 범위, contamination 검사, 평가 subset manifest, 출력 무결성 검사를 함께 보존했습니다.
-- 수행하지 않은 full benchmark, 세 번째 seed, human audit, regression suite를 결과로 포장하지 않고 실행 범위와 한계에 명시했습니다.
+- 세 번째 seed, frozen base-model baseline, 고정 subset·manifest·출력 회귀검사를 추가하고, 실제 사람이 평가하지 않은 human audit은 준비 자료와 미실행 상태를 분리해 기록했습니다.
 
 본 연구는 특정 데이터 선택기가 모든 모델과 모든 task에서 최적이라는 주장을 하지 않습니다. 하나의 English data pool, 하나의 base model, 하나의 embedding model, 하나의 토큰 예산에서 관찰되는 효과를 검증하는 resource-constrained study입니다.
 
@@ -125,7 +125,7 @@ Maximum sequence length는 2,048, device batch size는 1, gradient accumulation�
 
 평가 원천은 provenance를 위해 전체 revision을 고정했습니다. IFEval의 cached official train split에는 541 prompts가 있었고, GSM8K `main/test`는 1,319행, BBH는 27개 task의 6,511행이었습니다. GSM8K revision은 `740312add88f781978c0658806c59bc2815b9866`, BBH revision은 `982bb89fd79532a8ac676a61fc42eb1aeec63f99`입니다.
 
-여섯 개 학습 manifest와 IFEval train, GSM8K test, BBH test 사이의 exact overlap과 normalized `SequenceMatcher` threshold 0.92 이상의 near overlap을 검사했습니다. 모든 manifest에서 두 종류의 overlap은 0이었습니다. 이 검사는 학습 데이터가 평가 문항을 직접 포함하지 않는지 확인하는 절차이며, 의미적으로 유사한 모든 문장을 제거했다는 주장은 아닙니다.
+여덟 개 학습 manifest와 IFEval train, GSM8K test, BBH test 사이의 exact overlap과 normalized `SequenceMatcher` threshold 0.92 이상의 near overlap을 검사했습니다. 기존 subset과 확장 subset 모두에서 모든 manifest의 exact·near overlap은 0이었습니다. 이 검사는 학습 데이터가 평가 문항을 직접 포함하지 않는지 확인하는 절차이며, 의미적으로 유사한 모든 문장을 제거했다는 주장은 아닙니다.
 
 ### 3.6 고정 평가 subset과 채점
 
@@ -137,11 +137,13 @@ Maximum sequence length는 2,048, device batch size는 1, gradient accumulation�
 | GSM8K | 1,319 test rows | 256 prompts | prompt length 4-quantile | 128 new tokens |
 | BBH | 6,511 rows, 27 tasks | 216 prompts | task별 8개 | 128 new tokens |
 
+추가 reliability protocol은 동일한 최종 subset에서 IFEval 1,024, GSM8K·BBH 256 new tokens를 사용했습니다. 이 protocol에는 기존 6개 adapter의 long-generation sensitivity, seed 2026의 random/diversity adapter, frozen base model을 포함했습니다. 이 결과는 원래 primary protocol을 대체하지 않습니다. 별도로 확장 subset은 IFEval 384, GSM8K 512, BBH 432(task별 16개)로 생성하고 contamination을 재검사했으며, seed 2026의 random/diversity adapter 성능도 같은 별도 protocol에서 분석했습니다.
+
 Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instruction-level strict accuracy, GSM8K exact-match accuracy, BBH normalized accuracy, BBH task macro-average, BBH minimum task accuracy를 secondary 또는 robustness metric으로 사용했습니다. 모든 평가에서 greedy decoding(`do_sample=False`)과 batch size 8을 사용했습니다. IFEval은 instruction-level 판정도 함께 산출했으며, GSM8K와 BBH는 평가기 구현의 exact-match와 normalized answer 판정을 사용했습니다.
 
 ### 3.7 통계 분석과 무결성 검사
 
-각 strategy의 평균과 표준편차는 seed 13과 42의 adapter 점수에서 계산했습니다. Paired bootstrap은 동일 evaluation ID의 두 strategy 출력을 짝지은 뒤, 먼저 두 seed 점수를 ID별로 평균하고 10,000회 재표집했습니다. Bootstrap seed는 2026입니다. 보고한 paired contrast는 quality minus random과 diversity minus random입니다.
+각 strategy의 평균과 표준편차는 seed 13과 42의 adapter 점수에서 계산했습니다. Paired bootstrap은 동일 evaluation ID의 두 strategy 출력을 짝지은 뒤, 먼저 두 seed 점수를 ID별로 평균하고 10,000회 재표집했습니다. Bootstrap seed는 2026입니다. 보고한 primary paired contrast는 quality minus random과 diversity minus random입니다. 추가 seed 분석은 quality seed 2026이 없으므로 random 대 diversity에만 적용하고, seed별 차이와 세 seed를 ID별로 평균한 paired bootstrap을 별도 표에 기록했습니다. Base model은 strategy 평균이나 paired strategy contrast에 포함하지 않았습니다.
 
 최종 결과는 6개 adapter와 3개 benchmark의 18개 output file을 대상으로 검사했습니다. 파일별 예상 행 수와 실제 행 수, JSON parse error, duplicate ID, missing ID, extra ID, malformed score object, empty response를 확인했습니다. Decoded text를 다시 encoding한 token count가 generation cap 이상이면 possible truncation으로 표시했습니다. 이 flag는 원래 generated token ID가 저장되지 않은 상태에서 수행한 보수적 진단이므로, 모든 사례가 실제 truncation이었다고 단정하지 않습니다.
 
@@ -157,10 +159,11 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 |---|---|---|---|
 | IFEval 전체 평가 | 541 prompts 전체 | 183행에서 비용 문제로 중단 | partial run은 diagnostic으로만 보존 |
 | 최종 평가 | full benchmark 우선 | 고정 balanced subset 사용 | 최종 표에 subset임을 명시 |
-| 추가 seed | seed 2026 추가 | 수행하지 않음 | 2-seed 한계로 명시 |
+| 추가 seed | seed 2026 추가 | random·diversity만 완료 | 3-policy 3-seed replication으로 과장하지 않음 |
 | human audit | 200-example quality audit | 수행하지 않음 | quality score를 heuristic으로 기술 |
-| 회귀 평가 | general-capability suite | 완료하지 않음 | broad capability 개선 주장 금지 |
-| base baseline | 전체 최종 benchmark baseline | generation smoke만 수행 | full baseline 부재를 한계로 명시 |
+| 회귀 평가 | artifact·schema·token·문서 검사 | 완료 | general-capability 개선과 구분 |
+| base baseline | 동일 subset frozen baseline | 완료 | full official benchmark와 구분 |
+| 확장 subset | 2배 fixed subset | subset·오염 검사·random/diversity 성능 평가 완료 | primary 및 3-seed 결과와 별도 protocol로 보고 |
 
 처음 실행한 32-example benchmark pilot도 pipeline 검증 산출물로 보존했지만, 최종 통계 비교에는 포함하지 않았습니다. 이 표는 계획과 실제의 차이를 숨기지 않기 위한 amendment 기록입니다.
 
@@ -179,6 +182,8 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 | Diversity | 13 | 1,029 | 1,000,000 | 129 | 25.7 |
 | Diversity | 42 | 1,021 | 1,000,000 | 128 | 26.9 |
 
+추가 seed 2026의 manifest와 학습은 random 995행, diversity 1,027행으로 각각 정확히 1,000,000 formatted token을 사용했습니다. 두 adapter 모두 동일한 4-bit NF4 QLoRA 조건에서 1 epoch equivalent procedure로 학습했습니다. Quality seed 2026은 실행하지 않았으므로 이 추가 seed는 random 대 diversity robustness 비교로만 사용합니다.
+
 학습 loss의 첫 값과 마지막 값은 각각 random seed 13에서 2.5431과 1.0485, random seed 42에서 2.2237과 2.4013, quality seed 13에서 1.6032와 1.4287, quality seed 42에서 1.8829와 1.1492, diversity seed 13에서 2.5650과 0.9765, diversity seed 42에서 1.1651과 0.9089였습니다. 이 값은 training fit의 기록이며 evaluation performance의 대체 지표로 해석하지 않았습니다.
 
 ### 4.2 평가 출력의 완전성
@@ -193,6 +198,10 @@ Primary metric은 IFEval prompt-level strict accuracy입니다. IFEval instructi
 | 합계 | 664 | 3,984 | 3,984 | 3,937 |
 
 Parse error, duplicate ID, missing ID, extra ID, malformed score object, empty response는 모두 0이었습니다. Possible truncation은 decoded response의 재인코딩 길이가 cap 이상인 행의 수입니다. 특히 GSM8K와 BBH에서는 거의 모든 응답이 이 진단에 걸렸으므로, 해당 benchmark 점수를 최종적인 완전 응답 성능으로 과대해석하지 않았습니다.
+
+추가 long-generation protocol도 같은 ID·score schema 검사를 통과했습니다. Seed 2026 random/diversity는 각각 664행으로 총 1,328행이며, random은 656행, diversity는 662행이 possible truncation으로 표시되었습니다. Frozen base model은 664행 중 297행이 표시되었습니다. 이 수치는 구조적 validity와 별도의 길이 진단이며, 원래 2-seed primary output의 completeness를 변경하지 않습니다.
+
+확장 subset의 2개 adapter와 3개 benchmark, 총 2,656행도 모두 구조적으로 완료되었습니다. Random은 1,318행, diversity는 1,322행이 possible truncation으로 표시되었습니다. IFEval·GSM8K·BBH의 cap 도달 가능성은 각각 random에서 374·512·432행, diversity에서 381·511·430행이었습니다. 따라서 확장 subset에서도 출력 무결성과 충분한 생성 길이는 별개의 축으로 관리했습니다.
 
 ### 4.3 주요 평가 결과
 
@@ -219,6 +228,25 @@ Parse error, duplicate ID, missing ID, extra ID, malformed score object, empty r
 
 Diversity와 random의 seed별 차이는 IFEval prompt strict에서 seed 13은 -1.04 percentage points, seed 42는 +0.52 percentage points였습니다. 반면 BBH에서는 각각 +7.87과 +11.11 percentage points였고, GSM8K에서는 +4.30과 +1.17 percentage points였습니다. 이 비교는 BBH와 GSM8K의 방향이 두 seed에서 일관되었다는 점을 보여주지만, IFEval primary metric에서 일관된 개선이 없었다는 결론도 함께 뒷받침합니다.
 
+| 정책 | Seed | IFEval prompt strict | GSM8K | BBH |
+|---|---:|---:|---:|---:|
+| Random | 2026 | 9.90% | 35.94% | 34.26% |
+| Diversity | 2026 | 8.33% | 43.36% | 38.43% |
+
+Seed 2026에서도 IFEval prompt strict의 diversity-minus-random은 -1.56 percentage points였고, GSM8K는 +7.42, BBH는 +4.17 percentage points였습니다. 세 seed를 random과 diversity에 한정해 ID별로 평균한 paired bootstrap은 IFEval -0.69 percentage points, 95% CI [-3.30, 1.91], GSM8K +4.30 points, 95% CI [1.04, 7.68], BBH +7.72 points, 95% CI [3.40, 12.19]였습니다. 이는 primary IFEval H1을 지지하지 않지만, BBH와 GSM8K의 탐색적 방향이 추가 seed에서 유지되었음을 보여줍니다.
+
+### 4.4.1 확장 subset robustness
+
+확장 subset에서는 IFEval 384개, GSM8K 512개, BBH 432개를 사용해 seed 2026의 random과 diversity를 다시 비교했습니다. 아래 구간은 세 seed를 합친 결과가 아니라, 확장 subset의 동일 example ID를 사용한 단일 seed의 paired bootstrap입니다.
+
+| 정책 | IFEval prompt strict | IFEval instruction strict | GSM8K | BBH |
+|---|---:|---:|---:|---:|
+| Random (seed 2026) | 18.23% | 36.04% | 40.23% | 32.87% |
+| Diversity (seed 2026) | 19.53% | 36.48% | 45.90% | 39.12% |
+| Diversity - random | +1.30 pp [-2.34, 4.95] | +1.48 pp [-1.95, 4.90] | +5.66 pp [0.39, 10.94] | +6.25 pp [1.62, 11.11] |
+
+확장 subset에서 diversity의 방향은 네 지표에서 모두 random보다 높았지만, IFEval 구간은 0을 포함했습니다. GSM8K와 BBH 구간은 이 고정된 단일 seed·subset에서 0을 포함하지 않았으나, 이는 3-seed 일반화 검정이나 full benchmark 결과가 아니며 generation-cap 진단의 영향을 받습니다. 따라서 확장 subset은 primary 결론을 뒤집는 증거가 아니라, 평가 subset 크기에 따른 robustness를 확인하는 보조 증거로 취급합니다.
+
 ### 4.5 Paired contrast
 
 | Metric | Quality - random | Diversity - random |
@@ -229,6 +257,10 @@ Diversity와 random의 seed별 차이는 IFEval prompt strict에서 seed 13은 -
 | BBH accuracy | +2.78 pp [-1.85, 7.64] | +9.49 pp [4.63, 14.58] |
 
 구간은 두 seed별 score를 example ID별로 평균한 뒤 수행한 paired 95% bootstrap confidence interval입니다. 네 contrast 중 0을 포함하지 않는 것은 secondary BBH에서 diversity가 random보다 높은 경우뿐입니다. Primary IFEval contrast에는 0이 포함되므로 주가설 H1을 지지할 근거로 사용할 수 없습니다.
+
+### 4.5.1 Frozen base-model baseline
+
+동일한 최종 subset과 long-generation 설정에서 adapter를 적용하지 않은 base model도 평가했습니다. Base model의 IFEval prompt strict는 13.02%, instruction strict는 38.95%, GSM8K는 43.75%, BBH는 28.70%였습니다. Base model은 IFEval과 GSM8K에서는 seed 2026 adapter보다 높았고, BBH에서는 random과 diversity adapter보다 낮았습니다. 이 baseline은 SFT 자체의 변화와 selection policy 간 차이를 분리하는 참고값이며, strategy 평균이나 paired strategy contrast에 포함하지 않았습니다.
 
 [그림 2. Paired contrast와 95% confidence interval.]
 
@@ -257,6 +289,8 @@ BBH의 전체 평균 차이가 소수의 task에만 의존하는지 확인하기
 
 본 조건에서 quality-plus-diversity 선택은 고정된 1,000,000-token QLoRA budget 아래 primary IFEval prompt-level strict accuracy를 개선하지 못했습니다. Diversity의 평균은 random보다 0.26 percentage points 낮았고, paired confidence interval은 [-3.39, 2.60]으로 0을 포함했습니다. Quality-only 역시 primary metric에서 random보다 낮았습니다. 그러므로 H1은 지지되지 않습니다.
 
+추가 seed를 random과 diversity에 한정해 포함해도 같은 방향입니다. 세 seed paired estimate는 -0.69 percentage points이고 95% CI는 [-3.30, 1.91]이므로, 추가 seed는 primary 결론을 뒤집지 않습니다. 다만 quality seed 2026이 없으므로 이것을 세 정책의 완전한 3-seed replication으로 해석하지 않습니다.
+
 H2도 지지되지 않습니다. BBH minimum task accuracy는 모든 정책과 두 seed에서 0이었습니다. 이 지표는 최저 성능 task를 확인하는 stress signal로는 의미가 있지만, 현재의 task별 표본과 모델 규모에서는 정책 차이를 구분하지 못했습니다.
 
 ### 5.2 왜 BBH와 IFEval의 방향이 달랐는가
@@ -273,35 +307,35 @@ Diversity가 BBH에서만 유리하게 나타난 것은 본 실험의 관찰입�
 
 ### 5.4 Seed별 효과의 일관성
 
-Seed별 결과는 평균값을 해석할 때 필요한 경계를 보여줍니다. IFEval prompt strict에서 diversity는 seed 13에서는 random보다 낮았지만 seed 42에서는 높았습니다. 반대로 BBH의 diversity 우위는 두 seed에서 모두 나타났고, GSM8K도 두 seed에서 같은 방향이었습니다. 따라서 “diversity가 모든 benchmark에서 안정적으로 개선된다”는 주장은 성립하지 않지만, “BBH subset에서 관찰된 차이가 seed 하나의 우연한 상승뿐이다”라고 단정하기도 어렵습니다.
+Seed별 결과는 평균값을 해석할 때 필요한 경계를 보여줍니다. IFEval prompt strict에서 diversity는 seed 13과 2026에서는 random보다 낮았고 seed 42에서만 높았습니다. BBH와 GSM8K의 diversity 우위는 세 seed에서 모두 나타났습니다. 따라서 “diversity가 모든 benchmark에서 안정적으로 개선된다”는 주장은 성립하지 않지만, “BBH subset에서 관찰된 차이가 seed 하나의 우연한 상승뿐이다”라고 단정하기도 어렵습니다.
 
 이 비대칭성은 primary metric을 사전에 지정한 이유를 설명합니다. 여러 benchmark 중 유리한 결과만 선택하면 선택 정책의 효과를 과장할 수 있으므로, IFEval에서의 paired contrast와 confidence interval을 주가설의 판정 기준으로 유지했습니다. BBH의 일관된 상승은 후속 검증의 우선순위를 높이는 탐색적 신호이지, H1을 뒤집는 근거는 아닙니다.
 
 ### 5.5 생성 한도와 점수 해석의 경계
 
-이번 결과에서 가장 중요한 운영상 위험은 점수 자체보다 생성 길이입니다. IFEval에서는 1,152개 출력 중 1,114개, GSM8K에서는 1,536개 중 1,530개, BBH에서는 1,296개 중 1,293개가 possible truncation으로 표시되었습니다. 전체 3,984개 중 3,937개라는 비율은 응답이 구조적으로 파싱되었다는 사실과 문제를 끝까지 풀었다는 사실을 분리해서 보아야 함을 뜻합니다.
+이번 결과에서 가장 중요한 운영상 위험은 점수 자체보다 생성 길이입니다. 기존 6개 adapter의 IFEval에서는 1,152개 출력 중 1,114개, GSM8K에서는 1,536개 중 1,530개, BBH에서는 1,296개 중 1,293개가 possible truncation으로 표시되었습니다. 추가 seed 2026에서도 1,328개 중 1,318개가 표시되었습니다. 이 비율은 응답이 구조적으로 파싱되었다는 사실과 문제를 끝까지 풀었다는 사실을 분리해서 보아야 함을 뜻합니다.
 
 이 진단은 decoded text를 다시 tokenizer에 넣어 generation cap 이상인지 확인한 보수적 flag입니다. 원래 generated token ID가 보존되지 않았기 때문에 실제 truncation의 확정 판정은 아닙니다. 그러나 GSM8K와 BBH에서 cap에 도달한 비율이 특히 높다는 사실은 후속 실험에서 더 긴 generation limit을 먼저 검증해야 한다는 충분한 근거가 됩니다. 이 절차 없이 현재의 BBH 상승을 완전한 reasoning 능력의 개선으로 표현해서는 안 됩니다.
 
 ## 6. 한계와 후속 실험
 
-첫째, 모델은 1.7B parameter에 불과하므로 더 큰 모델에 결과가 전이된다고 보장할 수 없습니다. 둘째, quality proxy는 heuristic이며 계획했던 200-example human audit로 검증하지 않았습니다. 셋째, 최종 비교는 전체 benchmark distribution이 아닌 resource-constrained deterministic subset에 기반합니다. 넷째, 3,984개 출력 중 3,937개가 generation cap에 도달했을 가능성이 있어, 특히 GSM8K와 BBH 결과에 불완전한 응답의 영향이 있을 수 있습니다.
+첫째, 모델은 1.7B parameter에 불과하므로 더 큰 모델에 결과가 전이된다고 보장할 수 없습니다. 둘째, quality proxy는 heuristic이며 200-example human audit용 blind sheet와 rubric은 준비했지만 실제 사람의 rating은 수행하지 않았습니다. 셋째, 최종 비교는 전체 benchmark distribution이 아닌 resource-constrained deterministic subset에 기반합니다. 넷째, 3,984개 출력 중 3,937개와 seed 2026 추가 출력 1,328개 중 1,318개가 generation cap에 도달했을 가능성이 있어, 특히 GSM8K와 BBH 결과에 불완전한 응답의 영향이 있을 수 있습니다.
 
-다섯째, 세 번째 seed 2026을 실행하지 않았고 blind human evaluation도 완료하지 않았습니다. 여섯째, general-capability regression suite와 full base-model benchmark baseline을 수행하지 않았으므로 helpfulness, fluency, safety, broad capability가 개선되었다고 주장할 수 없습니다. 일곱째, 하나의 English data pool, 하나의 embedding model, 하나의 token budget만 비교했습니다. 마지막으로 BBH raw row는 conversion card의 redistribution license가 audit에서 명확하지 않아 reproduction ZIP에 포함하지 않았습니다.
+다섯째, seed 2026은 random과 diversity만 실행했으므로 세 정책의 완전한 3-seed replication이 아닙니다. 여섯째, frozen base-model baseline은 동일한 subset에서 수행했지만 full official benchmark baseline은 아닙니다. 일곱째, artifact·schema·token·문서 회귀검사는 추가했지만 broad helpfulness, fluency, safety를 측정하는 general-capability regression suite는 수행하지 않았습니다. 여덟째, 2배 확장 subset의 random/diversity 성능도 완료했지만 single-seed·별도 subset 결과이므로 primary 및 3-seed 결과와 분리해 해석합니다. 아홉째, 하나의 English data pool, 하나의 embedding model, 하나의 token budget만 비교했습니다. 마지막으로 BBH raw row는 conversion card의 redistribution license가 audit에서 명확하지 않아 reproduction ZIP에 포함하지 않았습니다.
 
-후속 실험은 다음 순서가 적절합니다. 먼저 동일한 model revision과 manifest를 유지하면서 IFEval 512, GSM8K/BBH 128보다 긴 generation limit으로 평가를 반복해야 합니다. 다음으로 seed를 하나 이상 추가하고, quality score의 상위·중간·하위 구간에 대한 human audit를 수행해야 합니다. 그 뒤 full benchmark와 general-capability regression suite를 추가하고, task별 표본 수를 늘린 robustness statistic을 사전에 고정해야 합니다. 마지막으로 더 큰 model과 다른 data pool에서 같은 selector를 재현하여 결과의 범위를 확인해야 합니다.
+남은 후속 과제는 generation cap을 더 높인 stress test, 실제 human rating, full benchmark, general-capability regression suite, 더 큰 model과 다른 data pool 재현입니다. 이 과제들은 현재 결과를 대체하지 않고 별도 protocol로 관리해야 합니다.
 
 ## 7. 결론
 
-고정된 1,000,000 formatted-token QLoRA budget과 Qwen3-1.7B-Base 조건에서 quality-plus-diversity 선택은 사전에 정한 IFEval prompt-level strict accuracy를 안정적으로 개선하지 못했습니다. Secondary BBH subset에서는 개선이 관찰되었지만, IFEval에서의 음성 결과와 generation-cap 진단을 고려하면 이를 일반적 우위로 해석할 수 없습니다. 따라서 본 연구의 결론은 “diversity가 항상 좋다”가 아니라, 데이터 선택 정책의 효과가 task와 평가 설계에 의존하며 고정 예산·고정 subset·무결성 검사를 갖춘 비교가 필요하다는 것입니다.
+고정된 1,000,000 formatted-token QLoRA budget과 Qwen3-1.7B-Base 조건에서 quality-plus-diversity 선택은 사전에 정한 IFEval prompt-level strict accuracy를 안정적으로 개선하지 못했습니다. 추가 seed를 random과 diversity에 한정해도 이 primary 결론은 유지되었습니다. 확장 subset의 단일 seed robustness에서는 diversity가 IFEval·GSM8K·BBH에서 모두 높았지만, IFEval 구간은 0을 포함하고 GSM8K·BBH 결과도 generation-cap과 subset 범위를 고려해야 하므로 일반적 우위로 해석할 수 없습니다. Frozen base-model baseline은 SFT와 selector 효과를 분리하는 참고점을 제공하지만, broad capability 향상을 입증하지는 않습니다. 따라서 본 연구의 결론은 “diversity가 항상 좋다”가 아니라, 데이터 선택 정책의 효과가 task와 평가 설계에 의존하며 고정 예산·고정 subset·무결성 검사를 갖춘 비교가 필요하다는 것입니다.
 
-본 연구는 여섯 개 adapter의 frozen manifest, exact-token 학습 기록, 18개 평가 출력, validation report, paired bootstrap 분석, 계획 대비 실제 실행 범위를 함께 제공했습니다. 실행하지 않은 third seed, human audit, full baseline, regression suite는 명시적으로 후속 과제로 남겼습니다.
+본 연구는 여섯 개 primary adapter, seed 2026 random/diversity adapter, frozen base-model baseline, 확장 subset robustness 평가의 기록과 exact-token manifest, validation report, 3-seed random/diversity paired bootstrap, artifact regression report, human-audit preparation materials를 함께 제공합니다. 실제 human rating, full official benchmark, general-capability regression suite는 수행 범위 밖으로 명시합니다.
 
 ## 데이터와 코드 공개 및 재현 절차
 
-Workspace의 `work/selection_manifests/`에는 여섯 개 frozen selection manifest와 token summary가 있습니다. `work/evaluation_subsets_final/`에는 최종 IFEval, GSM8K, BBH subset manifest와 hash가 있습니다. `work/main_*`에는 adapter run summary와 training log가 있고, `work/evaluation_final_balanced/`에는 18개 benchmark output이 있습니다. `work/results_final/`에는 processed metric, validation report, paired bootstrap 결과와 figure가 있습니다.
+Workspace의 `work/selection_manifests/`와 `work/selection_manifests_seed2026/`에는 frozen selection manifest와 token summary가 있습니다. `work/evaluation_subsets_final/`에는 primary subset, `work/evaluation_subsets_expanded/`에는 확장 subset manifest와 hash가 있습니다. `work/main_*`에는 adapter run summary와 training log가 있고, `work/evaluation_final_balanced/`에는 primary output, `work/evaluation_seed2026_long_generation/`에는 추가 seed output, `work/evaluation_base_long_generation/`에는 frozen base output, `work/evaluation_expanded_long_generation/`에는 확장 subset output이 있습니다. `work/results_final/`, `work/results_seed2026_long_generation/`, `work/results_seed_robustness/`, `work/results_base_long_generation/`, `work/results_expanded_long_generation/`, `work/results_reliability/`에는 processed metric과 validation 자료가 있습니다.
 
-분석 코드는 `src/analyze_final_results.py`, frozen evaluation 코드는 `src/evaluate_frozen.py`, subset 생성 코드는 `src/make_eval_subset.py`, 전체 재현 명령은 `scripts/reproduce_analysis.ps1`에 기록했습니다. Reproduction ZIP에는 manuscript, PDF, 실행 스크립트, 환경 고정 파일, processed result와 validation 자료를 포함했습니다. Raw BBH row는 redistribution license가 명확하지 않아 의도적으로 제외했으며, 대신 BBH revision, subset hash, task allocation, download/regeneration 절차를 포함했습니다.
+분석 코드는 `src/analyze_final_results.py`, `src/analyze_followup_results.py`, `scripts/analyze_seed_robustness.py`, frozen evaluation 코드는 `src/evaluate_frozen.py`, subset 생성 코드는 `src/make_eval_subset.py`, artifact 회귀검사는 `scripts/validate_followup_artifacts.py`, human audit 준비는 `scripts/prepare_human_audit.py`에 기록했습니다. Reproduction ZIP에는 manuscript, PDF, 실행 스크립트, 환경 고정 파일, processed result와 validation 자료를 포함했습니다. Raw BBH row와 raw benchmark JSONL은 redistribution license와 패키지 정책 때문에 제외했으며, 대신 revision, subset hash, task allocation, download/regeneration 절차를 포함했습니다.
 
 재현 시 먼저 고정된 Python 환경과 model/dataset revision을 확인하고, selection manifest의 token 합계와 example ID uniqueness를 검사해야 합니다. 이후 adapter별 output completeness를 검증한 다음 분석 스크립트를 실행합니다. Partial IFEval run과 32-row pilot은 pipeline 진단 기록이므로 final table의 통계에 합산하지 않습니다.
 
@@ -316,7 +350,9 @@ Workspace의 `work/selection_manifests/`에는 여섯 개 frozen selection manif
 | 3. 오염 검사 | IFEval train, GSM8K test, BBH test overlap | exact·near overlap 모두 0 | `work/selection_manifests/*contamination*` |
 | 4. 평가 | adapter별 row 수와 score object | 18개 파일이 예상 ID를 한 번씩 포함 | `work/results_final/validation.json` |
 | 5. 분석 | seed 평균, paired bootstrap, task 요약 | 분석 CSV와 figure가 동일 입력에서 재생성 | `work/results_final/` |
-| 6. 문서 | 원고와 결과 파일의 수치 일치 | PDF와 원고의 결론·한계 일치 | `paper/manuscript.md`, `paper/paper.pdf` |
+| 6. 후속 평가 | seed 2026, base baseline, 확장 subset, protocol 분리 | 추가 결과가 primary 결과를 덮어쓰지 않음 | `work/results_seed2026_long_generation/`, `work/results_base_long_generation/`, `work/results_expanded_long_generation/` |
+| 7. 회귀검사 | token·schema·ID·문서·패키지 무결성 | `all_checks_pass: true`, ZIP `testzip=None` | `work/results_reliability/validation_followup.json` |
+| 8. 문서 | 원고와 결과 파일의 수치 일치 | PDF와 원고의 결론·한계 일치 | `paper/manuscript.md`, `paper/paper.pdf` |
 
 이 표의 통과 조건은 성능이 높다는 뜻이 아니라, 같은 입력과 같은 판정 규칙으로 결과를 다시 만들 수 있다는 뜻입니다. 특히 raw benchmark output을 공개하지 않는 환경에서는 revision, subset hash, output manifest, validation report를 함께 보존해야 결과의 provenance를 확인할 수 있습니다.
 

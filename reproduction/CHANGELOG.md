@@ -1,5 +1,16 @@
 # 변경 기록
 
+## 2026-09-14 후속 신뢰도 강화
+
+- seed 2026 random/diversity frozen evaluation을 `1,328/1,328`행으로 완료했습니다.
+- random/diversity 3-seed robustness paired bootstrap을 추가했습니다.
+- 동일 final subset에서 frozen base-model baseline `664/664`행을 완료했습니다.
+- IFEval 384, GSM8K 512, BBH 432의 expanded subset과 contamination report를 생성했습니다.
+- Expanded subset에서 seed 2026 random/diversity 성능 평가 `2,656/2,656`행과 별도 paired analysis를 완료했습니다.
+- exact-token, output schema, ID completeness, subset, 문서·패키지 검사를 자동화하고 validation을 통과했습니다.
+- 200-example human audit용 blind sheet와 rubric을 준비했지만 실제 human rating은 수행하지 않았습니다.
+- 결과 protocol을 primary, seed follow-up, base baseline, expanded robustness output으로 분리했습니다.
+
 ## 2026-09-13 후속 작업 현황
 
 - 기존 6개 adapter의 장문 generation sensitivity 평가를 `3,984/3,984`개 완료했습니다.

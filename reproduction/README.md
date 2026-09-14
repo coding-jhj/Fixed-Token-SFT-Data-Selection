@@ -8,7 +8,7 @@ metadata에 기록한 Qwen/Qwen3-1.7B-Base revision과 adapter별 정확히 1,00
 
 ## 현재 결론
 
-Primary IFEval prompt-level strict에서 diversity minus random 차이는 -0.26 percentage points였고, paired 95% bootstrap interval은 [-3.39, 2.60] percentage points였습니다. Primary hypothesis는 지지되지 않았습니다. Diversity는 secondary BBH subset에서 더 높았지만, 일반적 우위가 아닌 task-dependent evidence로 보고합니다. 기존 평가에서는 3,984개 decoded row 중 3,937개가 generation limit에 도달했을 가능성이 있었습니다. 후속 장문 평가 3,984개도 구조적으로 완료되었지만 3,928개가 새 limit에 도달했을 가능성이 있어, 이 결과는 sensitivity diagnostic으로만 취급합니다. 세 번째 seed 2026은 random/diversity 선택·학습을 완료했고, 평가는 1,192/1,328개까지 진행된 상태입니다.
+Primary IFEval prompt-level strict에서 diversity minus random 차이는 -0.26 percentage points였고, paired 95% bootstrap interval은 [-3.39, 2.60] percentage points였습니다. Primary hypothesis는 지지되지 않았습니다. Diversity는 secondary BBH subset에서 더 높았지만, 일반적 우위가 아닌 task-dependent evidence로 보고합니다. 기존 장문 평가 3,984개 중 3,928개가 새 limit에 도달했을 가능성이 있어 sensitivity diagnostic으로만 취급합니다. Seed 2026 random/diversity 1,328개는 구조적으로 완료되었고, 3-seed random/diversity IFEval paired difference는 -0.69 pp, BBH는 +7.72 pp였습니다. Frozen base-model baseline은 IFEval 13.02%, GSM8K 43.75%, BBH 28.70%입니다. 확장 subset(IFEval 384, GSM8K 512, BBH 432)에서는 diversity minus random이 IFEval +1.30 pp [-2.34, 4.95], GSM8K +5.66 pp [0.39, 10.94], BBH +6.25 pp [1.62, 11.11]이었으나, 단일 seed의 별도 robustness 결과로 분리해 해석합니다.
 
 ## 재현 범위
 
@@ -22,6 +22,8 @@ Primary IFEval prompt-level strict에서 diversity minus random 차이는 -0.26 
 - Evaluation subset: IFEval 192, GSM8K 256, BBH 216; selection seed 2026.
 - Primary generation cap: IFEval 512 new tokens; GSM8K와 BBH 128 new tokens. Follow-up sensitivity cap: IFEval 1,024, GSM8K/BBH 256 new tokens. 모두 greedy decoding, batch size 8.
 - Bootstrap: 10,000 paired resample, example ID별 두 evaluation seed 평균, seed 2026.
+- Expanded robustness subset: IFEval 384, GSM8K 512, BBH 432(task별 16개); seed 2027, 별도 protocol.
+- Frozen base baseline: 동일 final subset과 follow-up cap에서 adapter 없이 평가했으며 strategy 평균에 포함하지 않습니다.
 
 ## 파일 구성
 
@@ -29,6 +31,8 @@ Primary IFEval prompt-level strict에서 diversity minus random 차이는 -0.26 
 - `src/`: selection, training, evaluation, contamination, final-analysis code.
 - `data/`: selected-manifest summary/CSV와 frozen evaluation subset manifest.
 - `results/`: per-seed metric, strategy summary, bootstrap interval, BBH task metric, validation, analysis metadata.
+- `results/`에는 primary, seed 2026, base baseline, 확장 subset, 3-seed robustness와 artifact validation 결과를 protocol별로 분리해 보존합니다.
 - `environment.lock`: 검증된 연구 환경 버전과 hardware 기록.
 - `licenses_and_provenance.md`: source revision과 redistribution 범위.
 - `../work/PROJECT_STATUS_AND_RELIABILITY_PLAN_2026-09-13.md`: 다섯 기준별 현재 상태, 신뢰도 강화 범위와 예상 시간.
+- Human audit 자료는 `work/human_audit_200/`에 blind sheet와 rubric을 준비했지만 실제 사람의 rating은 포함하지 않습니다.

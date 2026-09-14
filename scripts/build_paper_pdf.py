@@ -190,7 +190,7 @@ class PaperPdf:
 
     def add_heading(self, level: int, value: str) -> None:
         # Keep a heading with enough room for the following paragraph/table.
-        self.ensure_space(0.14 if level >= 3 else 0.18)
+        self.ensure_space(0.14 if level >= 3 else 0.28)
         if level <= 2:
             self.y -= 0.018
             self.add_lines(value, fontsize=16 if level == 2 else 18, width=58, color="#183b56", line_step=0.027, after=0.009, bold=True)

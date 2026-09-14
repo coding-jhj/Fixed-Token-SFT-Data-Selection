@@ -240,3 +240,80 @@
 - Preserved progress: 1,192/1,328 rows (89.8%); diversity BBH 80/216. Remaining: 136 rows.
 - GitHub repository default branch is now `main`.
 - Updated handoff: `work/HANDOFF_2026-09-13.md`.
+
+## 2026-09-14 continuation: follow-up completion plan
+
+### Objective
+- Complete the two-adapter seed-2026 frozen evaluation without duplicating existing rows.
+- Analyze and validate seed-2026 outputs separately from the original two-seed primary results.
+- Integrate only verified follow-up evidence into the Korean manuscript, PDF, reproduction docs, provenance, and ZIP.
+- Run deterministic regression checks and, if time and GPU budget remain after the required work, add a separate frozen base-model baseline. Do not fabricate human-audit results.
+
+### Current verified state
+- No `evaluate_frozen.py` Python process is running.
+- `work/evaluation_seed2026_long_generation/random_seed2026/`: IFEval 192, GSM8K 256, BBH 216.
+- `work/evaluation_seed2026_long_generation/diversity_seed2026/`: IFEval 192, GSM8K 256, BBH 80; 136 BBH rows remain.
+- Git: `main` at `8d06e36`, tracking `origin/main`, with no user worktree changes reported.
+
+### Execution checklist
+1. Resume the seed-2026 evaluator with the exact handoff command; verify process exit and final row counts.
+2. Run `src/analyze_followup_results.py`; inspect validation, per-adapter, strategy, and paired-bootstrap outputs.
+3. Cross-check seed-2026 metrics against raw JSONL IDs/schema and preserve the original `work/results_final/` unchanged.
+4. Implement only evidence-backed manuscript/PDF changes: separate protocol sections, seed-2026 results, long-generation diagnostic, updated abstract/conclusion/limitations, and scope wording.
+5. Update root/reproduction README, provenance, changelog, and ZIP builder inputs while excluding raw benchmark JSONL and adapter weights.
+6. Rebuild PDF and ZIP; run compile, `pdfinfo` A4 checks, full-page PNG render review, ZIP `testzip=None`, and raw-JSONL count checks.
+7. Run regression checks for exact-token manifests, result row/schema completeness, aggregation consistency, and publication artifact consistency.
+8. If feasible without weakening the primary deliverable, evaluate the pinned base model on the same frozen subset and decoding protocol in a separate output directory; label it baseline evidence, never mix it into adapter strategy means.
+9. Update this thread with evidence and commit the verified follow-up integration to `main`; push only the requested curated files.
+
+### Non-negotiable interpretation rules
+- Original two-seed primary results remain the primary protocol and are not overwritten.
+- Long-generation outputs remain supplementary sensitivity evidence because possible truncation remains.
+- Seed-2026 outputs are a third-seed random/diversity extension only; no quality seed-2026 result exists.
+- Automated scoring is not a human audit.
+- No raw benchmark JSONL or adapter weights enter GitHub or the reproduction ZIP.
+
+### Current phase
+- Phase: seed-2026 evaluation resumption, before any publication edits.
+- Next action: launch the exact `--resume` command after the completed row/process checks.
+
+## 2026-09-14 autonomous reliability extension
+
+### Completed in this continuation
+- Seed-2026 evaluation completed: 1,328/1,328 rows; no Python evaluator remains.
+- `work/results_seed2026_long_generation/` validation passed; possible truncation diagnostic is 1,318/1,328 rows under the same conservative tokenizer-based rule.
+- Added `work/results_seed_robustness/` with per-seed random/diversity metrics and 3-seed paired bootstrap; the 3-seed IFEval prompt-strict diversity-minus-random estimate is -0.69 percentage points with 95% CI [-3.30, 1.91], while BBH is +7.72 points with 95% CI [3.40, 12.19].
+- Added base-model-only support to `src/evaluate_frozen.py`; frozen base-model evaluation is running/completing in `work/evaluation_base_long_generation/` with the same final subset and long-generation limits.
+- Created expanded fixed subsets in `work/evaluation_subsets_expanded/`: IFEval 384, GSM8K 512, BBH 432; expanded benchmark contamination report has zero exact and near overlap for all eight training manifests.
+- Prepared `work/human_audit_200/` blind audit materials and rubric. No human ratings have been fabricated or claimed.
+- Added `scripts/validate_followup_artifacts.py`, `scripts/analyze_seed_robustness.py`, and `scripts/prepare_human_audit.py`; compilation passed for each script.
+- `work/results_reliability/validation_followup.json` passed all checks for final subsets, seed-2026 outputs, base outputs, expanded subset, and eight exact-token summaries.
+
+### Active GPU phase
+- Expanded-subset evaluation is running for random/diversity seed 2026 under `work/evaluation_expanded_long_generation/` with IFEval 1,024 and GSM8K/BBH 256 new tokens.
+
+### Interpretation boundary
+- The original two-seed three-policy result remains primary.
+- The 3-seed robustness analysis applies only to random versus diversity because quality seed 2026 was not trained.
+- Base-model and expanded-subset results are separate robustness evidence, not strategy means.
+- Long-generation possible truncation remains a diagnostic limitation.
+
+## 2026-09-14 final continuation state
+
+### Verified completed
+- Expanded evaluation completed for both seed-2026 adapters: IFEval 384/384, GSM8K 512/512, BBH 432/432 per adapter; total 2,656/2,656 rows.
+- Expanded analysis passed with `validation_all_files_complete: true`. Diversity minus random was IFEval +1.30 pp (95% CI [-2.34, 4.95]), GSM8K +5.66 pp ([0.39, 10.94]), and BBH +6.25 pp ([1.62, 11.11]) in this single-seed expanded protocol.
+- Expanded possible-truncation diagnostics were random 1,318/1,328 and diversity 1,322/1,328; this evidence remains separate from the primary and 3-seed conclusions.
+- `scripts/reproduce_analysis.ps1` completed end-to-end: primary, seed-2026, expanded, base analysis, reliability validation, and PDF generation all passed.
+- `paper/paper.pdf` was regenerated and rendered to 24 PNG pages. `pdfinfo` reports 24 pages, each A4 (`595.44 x 841.68 pts`); rendered pages were visually checked for table overflow, clipping, mixed page sizes, and orphaned headings. A heading keep-space issue was fixed in `scripts/build_paper_pdf.py`.
+- Reproduction ZIP was rebuilt with processed expanded results, seed-2026 CSV manifests, follow-up analyzer, validation scripts, and human-audit rubric/manifest. ZIP verification: `testzip=None`, 82 entries, zero JSONL entries.
+- `work/results_reliability/validation_followup.json` reports `all_checks_pass: true` across final/expanded subsets, seed-2026 outputs, base output, and eight exact-token summaries.
+
+### Publication state
+- Manuscript, README, reproduction README, changelog, provenance, PDF, ZIP builder, analysis/reproduction scripts, and evaluator support were updated with protocol-separated evidence.
+- Human audit materials are prepared but no human ratings were performed or claimed.
+- No raw benchmark JSONL or adapter weights were added to the curated ZIP.
+- The tracked expanded evaluator session ended after all rows were flushed. One Python PID (3240) remained observable afterward, but its command line was not resolvable under current permissions; it was not terminated because the safe-stop policy prohibits killing unidentified processes.
+
+### Next action
+- Run final `git diff --check`, stage the curated changes, commit the follow-up integration, push only `origin/main`, and verify the remote branch. Do not modify `master`.

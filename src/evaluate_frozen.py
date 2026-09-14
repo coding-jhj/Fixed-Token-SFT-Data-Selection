@@ -152,7 +152,7 @@ def load_completed_outputs(path: Path) -> list[dict]:
     return rows
 
 
-def build_model(model_id: str, model_revision: str, tokenizer_revision: str, adapter: Path):
+def build_model(model_id: str, model_revision: str, tokenizer_revision: str, adapter: Path | None):
     tokenizer = AutoTokenizer.from_pretrained(model_id, revision=tokenizer_revision)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -169,7 +169,8 @@ def build_model(model_id: str, model_revision: str, tokenizer_revision: str, ada
         device_map="auto",
         dtype=torch.float16,
     )
-    model = PeftModel.from_pretrained(model, adapter)
+    if adapter is not None:
+        model = PeftModel.from_pretrained(model, adapter)
     model.eval()
     return model, tokenizer
 
@@ -360,7 +361,8 @@ def evaluate_benchmark(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--adapter", action="append", required=True, help="name=path; repeat for each adapter")
+    parser.add_argument("--adapter", action="append", help="name=path; repeat for each adapter")
+    parser.add_argument("--base", action="store_true", help="evaluate the frozen base model without an adapter")
     parser.add_argument("--benchmarks", nargs="+", choices=["ifeval", "gsm8k", "bbh"], default=["ifeval", "gsm8k", "bbh"])
     parser.add_argument("--ifeval-jsonl", type=Path, default=DEFAULT_IFEVAL)
     parser.add_argument("--gsm8k-jsonl", type=Path, default=DEFAULT_GSM8K)
@@ -387,12 +389,19 @@ def main() -> None:
     }
     if args.limit is not None:
         datasets = {key: rows[: args.limit] for key, rows in datasets.items()}
-    adapters = {}
-    for value in args.adapter:
-        name, separator, path = value.partition("=")
-        if not separator or not name or not path:
-            raise ValueError(f"Adapter must use name=path syntax: {value}")
-        adapters[name] = Path(path)
+    if args.base and args.adapter:
+        raise ValueError("Use either --base or --adapter, not both")
+    if not args.base and not args.adapter:
+        raise ValueError("Provide --base or at least one --adapter")
+    adapters: dict[str, Path | None] = {}
+    if args.base:
+        adapters["base_model"] = None
+    else:
+        for value in args.adapter:
+            name, separator, path = value.partition("=")
+            if not separator or not name or not path:
+                raise ValueError(f"Adapter must use name=path syntax: {value}")
+            adapters[name] = Path(path)
 
     all_summaries = {}
     for name, adapter in adapters.items():
