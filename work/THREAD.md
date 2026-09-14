@@ -316,4 +316,9 @@
 - The tracked expanded evaluator session ended after all rows were flushed. One Python PID (3240) remained observable afterward, but its command line was not resolvable under current permissions; it was not terminated because the safe-stop policy prohibits killing unidentified processes.
 
 ### Next action
-- Run final `git diff --check`, stage the curated changes, commit the follow-up integration, push only `origin/main`, and verify the remote branch. Do not modify `master`.
+- Completed below: final checks passed, follow-up integration was committed and pushed only to `origin/main`; `master` was not modified.
+
+### Final publication verification
+- `git diff --cached --check` passed before commit; the worktree was clean after push.
+- Publication commit: `7d19c3e Integrate follow-up reliability evidence`.
+- Remote verification: `origin/main` points to `7d19c3e5dd47778be70f92ea1ecc5145e87d9189`; `origin/master` remains `efd91950b1800cc64fb61c64c09f23c79dc83f95`.
